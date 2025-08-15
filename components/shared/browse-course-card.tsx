@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Clock, Bookmark, BookmarkCheck, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CourseModal } from "@/components/shared/course-modal";
+import { HighlightText } from "@/components/shared/highlight-text";
 
 export interface BrowseCourseCardProps {
   id: string;
@@ -18,6 +19,7 @@ export interface BrowseCourseCardProps {
   gradient: string;
   featured: string | null;
   skillLevel: string;
+  searchQuery?: string;
   onFavoriteToggle: (id: string, isFavorited: boolean) => void;
   initialFavorited?: boolean;
 }
@@ -35,6 +37,7 @@ export function BrowseCourseCard({
   gradient = "from-blue-500 to-purple-600",
   featured,
   skillLevel = "beginner",
+  searchQuery = "",
   onFavoriteToggle,
   initialFavorited = false,
 }: BrowseCourseCardProps) {
@@ -126,10 +129,10 @@ export function BrowseCourseCard({
           </div>
         </div>
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          {title}
+          <HighlightText text={title} highlight={searchQuery} />
         </h3>
         <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-          {description}
+          <HighlightText text={description} highlight={searchQuery} />
         </p>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center text-sm text-muted-foreground">

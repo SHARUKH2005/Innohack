@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryCard } from "@/components/shared/category-card";
 import { BrowseCourseCard } from "@/components/shared/browse-course-card";
 import { categories, courses, FilterOptions, filterAndPaginateCourses } from "@/lib/data";
 import { useFavorites } from "@/lib/hooks/use-favorites";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 
 export default function BrowsePage() {
   // State for filters
@@ -17,6 +18,10 @@ export default function BrowsePage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalResults, setTotalResults] = useState<number>(0);
+  
+  // Debounce search query to prevent excessive filtering
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   
   // Items per page
   const ITEMS_PER_PAGE = 6;
@@ -34,24 +39,31 @@ export default function BrowsePage() {
       skillLevel,
       duration,
       sortBy,
-      searchQuery,
+      searchQuery: debouncedSearchQuery,
       page: currentPage,
       itemsPerPage: ITEMS_PER_PAGE
     });
     
     setFilteredCourses(result.courses);
     setTotalPages(result.pagination.totalPages);
+    setTotalResults(result.pagination.totalItems);
     
     // Reset to page 1 when filters change
     if (currentPage !== 1 && result.pagination.totalPages < currentPage) {
       setCurrentPage(1);
     }
-  }, [selectedCategory, skillLevel, duration, sortBy, searchQuery, currentPage]);
+  }, [selectedCategory, skillLevel, duration, sortBy, debouncedSearchQuery, currentPage]);
   
   // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Reset to page 1 when searching
+    // Reset to page 1 when searching explicitly via form submit
+    setCurrentPage(1);
+  };
+  
+  // Clear search
+  const clearSearch = () => {
+    setSearchQuery('');
     setCurrentPage(1);
   };
   
@@ -89,16 +101,28 @@ export default function BrowsePage() {
             <h1 className="text-3xl font-bold text-foreground">Browse Courses</h1>
             <form onSubmit={handleSearch} className="flex items-center w-full md:w-auto max-w-md">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${debouncedSearchQuery ? 'text-primary' : 'text-muted-foreground'}`} />
                 <input 
                   type="text" 
                   placeholder="Search courses..." 
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-border rounded-l-md bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (currentPage !== 1) setCurrentPage(1); // Reset to first page when typing
+                  }}
+                  className={`w-full pl-10 pr-10 py-2 border ${debouncedSearchQuery ? 'border-primary' : 'border-border'} rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200`}
                 />
+                {searchQuery && (
+                  <button 
+                    type="button"
+                    onClick={clearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <Button type="submit" className="rounded-l-none">Search</Button>
             </form>
           </div>
 
@@ -209,11 +233,21 @@ export default function BrowsePage() {
 
           {/* Course Listings - Title */}
           <div className="pt-2 border-t border-border mb-6">
-            <h2 className="text-xl font-semibold mt-4">
-              {selectedCategory 
-                ? `${categories.find(c => c.slug === selectedCategory)?.name || 'Selected'} Courses` 
-                : 'Featured Courses'}
-            </h2>
+            <div className="flex items-center justify-between mt-4">
+              <h2 className="text-xl font-semibold">
+                {debouncedSearchQuery
+                  ? `Search Results${selectedCategory ? ` in ${categories.find(c => c.slug === selectedCategory)?.name}` : ''}`
+                  : selectedCategory
+                    ? `${categories.find(c => c.slug === selectedCategory)?.name || 'Selected'} Courses`
+                    : 'Featured Courses'
+                }
+              </h2>
+              {debouncedSearchQuery && (
+                <span className="text-sm text-muted-foreground">
+                  {totalResults} {totalResults === 1 ? 'result' : 'results'} for &ldquo;{debouncedSearchQuery}&rdquo;
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Course Listings */}
@@ -238,6 +272,7 @@ export default function BrowsePage() {
                     gradient={course.gradient}
                     featured={course.featured}
                     skillLevel={course.skillLevel}
+                    searchQuery={debouncedSearchQuery}
                     onFavoriteToggle={toggleFavorite}
                     initialFavorited={isFavorite(course.id)}
                   />

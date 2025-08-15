@@ -1321,10 +1321,16 @@ export function filterAndPaginateCourses(options: FilterOptions) {
   // Search query
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
-    filteredCourses = filteredCourses.filter(course => 
-      course.title.toLowerCase().includes(query) || 
-      course.description.toLowerCase().includes(query)
-    );
+    filteredCourses = filteredCourses.filter(course => {
+      // Find the category object for this course to get the category name
+      const categoryObj = categories.find(cat => cat.slug === course.category);
+      const categoryName = categoryObj?.name.toLowerCase() || '';
+      
+      return course.title.toLowerCase().includes(query) || 
+             course.description.toLowerCase().includes(query) ||
+             categoryName.includes(query) ||
+             course.skillLevel.toLowerCase().includes(query);
+    });
   }
 
   // Sorting
