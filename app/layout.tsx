@@ -16,7 +16,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={{
+        signIn: {
+          start: {
+            title: "Sign in to Learnify",
+            subtitle: "to continue to your learning dashboard"
+          }
+        },
+        signUp: {
+          start: {
+            title: "Create your Learnify account",
+            subtitle: "to start your learning journey"
+          }
+        }
+      }}
+    >
       <html lang="en">
         <body className={`${inter.className} h-full`}>{children}</body>
       </html>
