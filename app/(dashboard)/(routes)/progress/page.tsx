@@ -1,8 +1,57 @@
+"use client"
+
 import { UserButton } from "@clerk/nextjs"
-import { BookOpen, BarChart3, Calendar, ArrowUpRight, Sun, Moon, CheckSquare, Award, Zap, Compass } from "lucide-react"
+import { BookOpen, BarChart3, Calendar, ArrowUpRight, Sun, Moon, CheckSquare, Award, Zap, Compass, X, Clock, BookOpen as BookIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 export default function ProgressPage() {
+  // State for time period filter and event popup
+  const [timePeriod, setTimePeriod] = useState("monthly")
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  
+  // Example learning events data - would come from API in real app
+  // Define weekly events first
+  const weeklyEvents = [
+    { day: 9, month: "Aug", title: "React Components", hours: 1.2, lessons: 3, notes: "Completed lessons on component lifecycle and hooks", category: "React Fundamentals" },
+    { day: 10, month: "Aug", title: "React State Management", hours: 0.8, lessons: 2, notes: "Learned about Context API and useReducer", category: "React Fundamentals" },
+    { day: 11, month: "Aug", title: "CSS Grid Layout", hours: 1.5, lessons: 4, notes: "Practiced creating responsive grid layouts", category: "CSS Animations" },
+    { day: 12, month: "Aug", title: "Node.js Routing", hours: 2.3, lessons: 3, notes: "Built Express routes for REST API", category: "Node.js Backend" },
+    { day: 13, month: "Aug", title: "User Authentication", hours: 1.8, lessons: 2, notes: "Implemented JWT token-based auth flow", category: "Node.js Backend" },
+    { day: 14, month: "Aug", title: "Design Systems", hours: 1.0, lessons: 2, notes: "Studied component design principles", category: "UI/UX Design" },
+    { day: 15, month: "Aug", title: "JavaScript Promises", hours: 2.5, lessons: 3, notes: "Deep dive into async/await patterns", category: "Advanced JavaScript" },
+  ]
+  
+  // Earlier August events
+  const earlyAugustEvents = [
+    { day: 1, month: "Aug", title: "React Introduction", hours: 1.0, lessons: 2, notes: "Started React fundamentals course", category: "React Fundamentals" },
+    { day: 3, month: "Aug", title: "JavaScript ES6", hours: 2.2, lessons: 5, notes: "Learned about arrow functions and destructuring", category: "Advanced JavaScript" },
+    { day: 5, month: "Aug", title: "Node.js Basics", hours: 1.5, lessons: 3, notes: "Set up first Node.js server", category: "Node.js Backend" },
+    { day: 7, month: "Aug", title: "UI Principles", hours: 0.5, lessons: 1, notes: "Color theory and typography", category: "UI/UX Design" },
+  ]
+  
+  // Future events
+  const futureEvents = [
+    { day: 17, month: "Aug", title: "CSS Animations", hours: 0, lessons: 0, notes: "Planned: Animation principles", category: "CSS Animations", planned: true },
+    { day: 19, month: "Aug", title: "React Router", hours: 0, lessons: 0, notes: "Planned: Client-side routing", category: "React Fundamentals", planned: true },
+    { day: 21, month: "Aug", title: "API Testing", hours: 0, lessons: 0, notes: "Planned: Jest and Supertest", category: "Node.js Backend", planned: true },
+  ]
+  
+  // July events
+  const julyEvents = [
+    { day: 15, month: "Jul", title: "Programming Basics", hours: 1.5, lessons: 4, notes: "Variables, loops and functions", category: "Advanced JavaScript" },
+    { day: 18, month: "Jul", title: "HTML Fundamentals", hours: 2.0, lessons: 5, notes: "Semantic HTML and accessibility", category: "UI/UX Design" },
+    { day: 22, month: "Jul", title: "CSS Basics", hours: 1.8, lessons: 4, notes: "Selectors and layouts", category: "CSS Animations" },
+    { day: 25, month: "Jul", title: "JavaScript DOM", hours: 2.5, lessons: 6, notes: "DOM manipulation and events", category: "Advanced JavaScript" },
+    { day: 28, month: "Jul", title: "HTTP & APIs", hours: 1.2, lessons: 3, notes: "RESTful services and fetch API", category: "Node.js Backend" },
+  ]
+  
+  // Combine events for different views
+  const learningEvents = {
+    weekly: weeklyEvents,
+    monthly: [...earlyAugustEvents, ...weeklyEvents, ...futureEvents],
+    allTime: [...julyEvents, ...earlyAugustEvents, ...weeklyEvents, ...futureEvents]
+  }
   return (
     <div>
       {/* Main Content */}
@@ -15,15 +64,27 @@ export default function ProgressPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="flex items-center">
+            <Button 
+              variant="outline" 
+              className={`flex items-center ${timePeriod === "weekly" ? "bg-primary text-primary-foreground" : ""}`}
+              onClick={() => setTimePeriod("weekly")}
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Weekly
             </Button>
-            <Button variant="outline" className="flex items-center bg-primary text-primary-foreground">
+            <Button 
+              variant="outline" 
+              className={`flex items-center ${timePeriod === "monthly" ? "bg-primary text-primary-foreground" : ""}`}
+              onClick={() => setTimePeriod("monthly")}
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Monthly
             </Button>
-            <Button variant="outline" className="flex items-center">
+            <Button 
+              variant="outline" 
+              className={`flex items-center ${timePeriod === "allTime" ? "bg-primary text-primary-foreground" : ""}`}
+              onClick={() => setTimePeriod("allTime")}
+            >
               <Calendar className="h-4 w-4 mr-2" />
               All time
             </Button>
@@ -40,67 +101,71 @@ export default function ProgressPage() {
                   <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">42 hrs</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {timePeriod === "weekly" ? "11.1" : timePeriod === "monthly" ? "42" : "78.5"} hrs
+                  </p>
                   <p className="text-sm text-muted-foreground">Total Learning Time</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span>12% increase from last month</span>
+                <span>
+                  {timePeriod === "weekly" ? "8" : timePeriod === "monthly" ? "12" : "15"}% increase from {timePeriod === "weekly" ? "last week" : timePeriod === "monthly" ? "last month" : "last quarter"}
+                </span>
               </div>
             </div>
 
             <div className="p-6 bg-card rounded-lg border border-border">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <CheckSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">8</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {timePeriod === "weekly" ? "2" : timePeriod === "monthly" ? "8" : "15"}
+                  </p>
                   <p className="text-sm text-muted-foreground">Courses Completed</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span>2 more than last month</span>
+                <span>{timePeriod === "weekly" ? "1" : timePeriod === "monthly" ? "2" : "4"} more than {timePeriod === "weekly" ? "last week" : timePeriod === "monthly" ? "last month" : "last quarter"}</span>
               </div>
             </div>
 
             <div className="p-6 bg-card rounded-lg border border-border">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+                  <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">32</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {timePeriod === "weekly" ? "17" : timePeriod === "monthly" ? "32" : "56"}
+                  </p>
                   <p className="text-sm text-muted-foreground">Lessons Completed</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span>8 more than last month</span>
+                <span>{timePeriod === "weekly" ? "4" : timePeriod === "monthly" ? "8" : "14"} more than {timePeriod === "weekly" ? "last week" : timePeriod === "monthly" ? "last month" : "last quarter"}</span>
               </div>
             </div>
 
             <div className="p-6 bg-card rounded-lg border border-border">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                  </svg>
+                  <Award className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">4.8</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {timePeriod === "weekly" ? "4.9" : timePeriod === "monthly" ? "4.8" : "4.7"}
+                  </p>
                   <p className="text-sm text-muted-foreground">Avg. Rating Given</p>
                 </div>
               </div>
               <div className="mt-4 flex items-center text-sm text-green-600 dark:text-green-400">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span>0.2 higher than last month</span>
+                <span>{timePeriod === "weekly" ? "0.3" : timePeriod === "monthly" ? "0.2" : "0.1"} higher than {timePeriod === "weekly" ? "last week" : timePeriod === "monthly" ? "last month" : "last quarter"}</span>
               </div>
             </div>
           </div>
@@ -120,82 +185,265 @@ export default function ProgressPage() {
             </div>
           </div>
           
-          {/* Calendar Grid */}
-          <div className="mb-4">
-            {/* Week days header */}
-            <div className="grid grid-cols-7 gap-1 mb-1">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                  {day}
-                </div>
-              ))}
-            </div>
-            
-            {/* Calendar body */}
-            <div className="grid grid-cols-7 gap-1">
-              {/* Empty spaces for start of month */}
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={`empty-start-${i}`} className="h-12 sm:h-16 rounded-md"></div>
-              ))}
+          {/* Weekly View */}
+          {timePeriod === "weekly" && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground mb-2">August 9-15, 2025</div>
               
-              {/* Calendar days */}
-              {Array.from({ length: 31 }).map((_, index) => {
-                // Calculate activity metrics - more realistic pattern
-                const day = index + 1;
-                const isWeekend = (day + 2) % 7 === 0 || (day + 1) % 7 === 0;
-                const studyHours = isWeekend ? 2.5 : (day % 7 === 3 || day % 7 === 4) ? 1.5 : 0.8;
-                const lessonsCompleted = isWeekend ? 4 : (day % 7 === 3 || day % 7 === 4) ? 2 : 1;
-                const isCurrentDay = day === 15;
-                const isPastDay = day <= 15;
-                const opacity = isPastDay ? 1 : 0.4;
-                
-                return (
+              {/* Weekly timeline view */}
+              <div className="space-y-3">
+                {learningEvents.weekly.map((event, index) => (
                   <div 
-                    key={`day-${day}`} 
-                    className={`h-12 sm:h-16 rounded-md flex flex-col items-center justify-start p-1 border ${isCurrentDay ? 'border-primary' : 'border-border'} ${isPastDay ? '' : 'opacity-40'}`}
+                    key={index}
+                    onClick={() => setSelectedEvent(event)}
+                    className="flex items-center p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer"
                   >
-                    <span className={`text-xs font-medium mb-1 ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <div className="w-16 text-center">
+                      <div className="text-xs font-medium text-primary">{event.day} {event.month}</div>
+                      <div className="text-[10px] text-muted-foreground">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][(event.day + 1) % 7]}</div>
+                    </div>
+                    <div className={`w-2 h-2 rounded-full mx-2 ${event.category === "React Fundamentals" ? "bg-blue-500" : 
+                      event.category === "Node.js Backend" ? "bg-indigo-500" : 
+                      event.category === "Advanced JavaScript" ? "bg-yellow-500" : 
+                      event.category === "UI/UX Design" ? "bg-orange-500" : "bg-green-500"}`} />
+                    <div className="flex-grow">
+                      <div className="text-sm font-medium">{event.title}</div>
+                      <div className="text-xs text-muted-foreground">{event.category}</div>
+                    </div>
+                    <div className="flex flex-col items-end text-xs text-muted-foreground">
+                      <div className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        <span>{event.hours}h</span>
+                      </div>
+                      <div className="flex items-center mt-0.5">
+                        <BookIcon className="h-3 w-3 mr-1" />
+                        <span>{event.lessons} lessons</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Monthly View */}
+          {timePeriod === "monthly" && (
+            <div className="mb-4">
+              <div className="text-sm text-muted-foreground mb-2">August 2025</div>
+              
+              {/* Calendar Grid */}
+              <div>
+                {/* Week days header */}
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                    <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
                       {day}
-                    </span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Calendar body */}
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Empty spaces for start of month */}
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <div key={`empty-start-${i}`} className="h-20 rounded-md"></div>
+                  ))}
+                  
+                  {/* Calendar days */}
+                  {Array.from({ length: 31 }).map((_, index) => {
+                    const day = index + 1;
+                    const isCurrentDay = day === 15;
+                    const isPastDay = day <= 15;
                     
-                    {/* Activity indicators */}
-                    {isPastDay && (
-                      <div className="flex flex-col items-center justify-center flex-grow">
-                        <div className="flex items-center mb-1">
-                          <div className="w-full h-1.5 bg-primary rounded-full" style={{width: `${studyHours * 15}px`}}></div>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="w-full h-1.5 bg-green-500 rounded-full" style={{width: `${lessonsCompleted * 8}px`}}></div>
+                    // Find events for this day
+                    const dayEvents = learningEvents.monthly.filter(event => event.day === day && event.month === "Aug");
+                    const hasEvents = dayEvents.length > 0;
+                    const isPlannedDay = dayEvents.some(event => event.planned);
+                    
+                    return (
+                      <div 
+                        key={`day-${day}`} 
+                        className={`h-20 rounded-md flex flex-col p-1 border ${isCurrentDay ? 'border-primary' : 'border-border'} ${isPastDay ? '' : 'opacity-60'}`}
+                      >
+                        <span className={`text-xs font-medium ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                          {day}
+                        </span>
+                        
+                        {/* Events for the day */}
+                        <div className="flex-grow overflow-hidden">
+                          {hasEvents && dayEvents.map((event, i) => (
+                            <div 
+                              key={i}
+                              onClick={() => setSelectedEvent(event)}
+                              className={`text-xs mt-0.5 px-1 py-0.5 rounded truncate cursor-pointer 
+                                ${event.category === "React Fundamentals" ? "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300" : 
+                                event.category === "Node.js Backend" ? "bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300" : 
+                                event.category === "Advanced JavaScript" ? "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300" : 
+                                event.category === "UI/UX Design" ? "bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300" : 
+                                "bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300"} 
+                                ${event.planned ? 'border border-dashed' : ''}`}
+                            >
+                              {event.title}
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    )}
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="mt-4 flex flex-col items-center">
+                <div className="text-xs text-muted-foreground grid grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-1">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 mr-1 bg-blue-100 dark:bg-blue-900/20 rounded-sm"></div>
+                    <span>React</span>
                   </div>
-                );
-              })}
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 mr-1 bg-indigo-100 dark:bg-indigo-900/20 rounded-sm"></div>
+                    <span>Node.js</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 mr-1 bg-yellow-100 dark:bg-yellow-900/20 rounded-sm"></div>
+                    <span>JavaScript</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 mr-1 bg-orange-100 dark:bg-orange-900/20 rounded-sm"></div>
+                    <span>UI/UX</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 mr-1 bg-green-100 dark:bg-green-900/20 rounded-sm"></div>
+                    <span>CSS</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
           
-          <div className="mt-4 flex flex-col items-center">
-            <span className="text-sm text-muted-foreground mb-2">August 2025</span>
-            <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-8 gap-y-1">
-              <div className="flex items-center">
-                <div className="w-3 h-3 mr-2 bg-primary/20 border border-primary rounded-sm"></div>
-                <span>0-1 Hours</span>
+          {/* All Time View */}
+          {timePeriod === "allTime" && (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground mb-2">July - August 2025</div>
+              
+              {/* Monthly activity chart */}
+              <div className="h-64 flex items-end justify-between">
+                {[
+                  {month: "Jul", week1: 4.5, week2: 6.2, week3: 5.8, week4: 8.0},
+                  {month: "Aug", week1: 6.8, week2: 7.5, week3: 9.3, week4: 2.5}
+                ].map((monthData, monthIndex) => (
+                  <div key={monthIndex} className="flex-1 flex flex-col items-center">
+                    <div className="w-full flex justify-around">
+                      {Object.entries(monthData)
+                        .filter(([key]) => key.startsWith('week'))
+                        .map(([week, hours], i) => {
+                          const isCurrentWeek = monthData.month === "Aug" && week === "week3";
+                          const isFutureWeek = monthData.month === "Aug" && week === "week4";
+                          const heightPercentage = (hours / 10) * 100;
+                          
+                          return (
+                            <div key={week} className="w-10 flex flex-col items-center">
+                              <div 
+                                className={`w-full rounded-t ${isFutureWeek ? 'bg-primary/20' : 'bg-primary'}`} 
+                                style={{ height: `${heightPercentage}%` }}
+                              ></div>
+                              {i === 1 && (
+                                <div className="mt-2 text-xs text-muted-foreground">{monthData.month}</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 mr-2 bg-primary/40 border border-primary rounded-sm"></div>
-                <span>1-2 Hours</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 mr-2 bg-primary/70 border border-primary rounded-sm"></div>
-                <span>2-3 Hours</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 mr-2 bg-primary border border-primary rounded-sm"></div>
-                <span>3+ Hours</span>
+              
+              {/* All time stats */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Total Study Time</p>
+                  <p className="text-2xl font-bold">42 hours</p>
+                </div>
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Lessons Completed</p>
+                  <p className="text-2xl font-bold">32 lessons</p>
+                </div>
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Study Sessions</p>
+                  <p className="text-2xl font-bold">18 sessions</p>
+                </div>
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Learning Streak</p>
+                  <p className="text-2xl font-bold">7 days</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+          
+          {/* Event Detail Popup */}
+          {selectedEvent && (
+            <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+              <div className="bg-background rounded-lg shadow-xl max-w-md w-full p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold">{selectedEvent.title}</h3>
+                    <p className="text-sm text-muted-foreground">{selectedEvent.day} {selectedEvent.month}, 2025</p>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedEvent(null)}
+                    className="rounded-full p-1 hover:bg-muted transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-2 ${
+                      selectedEvent.category === "React Fundamentals" ? "bg-blue-500" : 
+                      selectedEvent.category === "Node.js Backend" ? "bg-indigo-500" : 
+                      selectedEvent.category === "Advanced JavaScript" ? "bg-yellow-500" : 
+                      selectedEvent.category === "UI/UX Design" ? "bg-orange-500" : "bg-green-500"
+                    }`} />
+                    <span>{selectedEvent.category}</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 pb-4">
+                    <div className="p-3 bg-muted/50 rounded-md">
+                      <div className="flex items-center text-sm mb-1">
+                        <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span className="text-muted-foreground">Hours</span>
+                      </div>
+                      <p className="text-lg font-medium">{selectedEvent.hours}</p>
+                    </div>
+                    
+                    <div className="p-3 bg-muted/50 rounded-md">
+                      <div className="flex items-center text-sm mb-1">
+                        <BookIcon className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span className="text-muted-foreground">Lessons</span>
+                      </div>
+                      <p className="text-lg font-medium">{selectedEvent.lessons}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Notes</h4>
+                    <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">{selectedEvent.notes}</p>
+                  </div>
+                  
+                  {selectedEvent.planned ? (
+                    <div className="mt-4 flex justify-center">
+                      <Button variant="outline" className="mr-2" onClick={() => setSelectedEvent(null)}>Cancel</Button>
+                      <Button onClick={() => setSelectedEvent(null)}>Start Learning</Button>
+                    </div>
+                  ) : (
+                    <div className="mt-4 flex justify-end">
+                      <Button variant="outline" onClick={() => setSelectedEvent(null)}>Close</Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Course Progress */}
