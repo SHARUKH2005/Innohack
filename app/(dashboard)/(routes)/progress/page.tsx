@@ -3,12 +3,18 @@
 import { UserButton } from "@clerk/nextjs"
 import { BookOpen, BarChart3, Calendar, ArrowUpRight, Sun, Moon, CheckSquare, Award, Zap, Compass, X, Clock, BookOpen as BookIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function ProgressPage() {
   // State for time period filter and event popup
   const [timePeriod, setTimePeriod] = useState("monthly")
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [isMounted, setIsMounted] = useState(false)
+  
+  // Only render client-side components after mount to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   
   // Example learning events data - would come from API in real app
   // Define weekly events first
@@ -52,6 +58,7 @@ export default function ProgressPage() {
     monthly: [...earlyAugustEvents, ...weeklyEvents, ...futureEvents],
     allTime: [...julyEvents, ...earlyAugustEvents, ...weeklyEvents, ...futureEvents]
   }
+  
   return (
     <div>
       {/* Main Content */}
@@ -195,7 +202,7 @@ export default function ProgressPage() {
                 {learningEvents.weekly.map((event, index) => (
                   <div 
                     key={index}
-                    onClick={() => setSelectedEvent(event)}
+                    onClick={() => isMounted && setSelectedEvent(event)}
                     className="flex items-center p-2 hover:bg-muted/50 rounded-md transition-colors cursor-pointer"
                   >
                     <div className="w-16 text-center">
@@ -274,7 +281,7 @@ export default function ProgressPage() {
                           {hasEvents && dayEvents.map((event, i) => (
                             <div 
                               key={i}
-                              onClick={() => setSelectedEvent(event)}
+                              onClick={() => isMounted && setSelectedEvent(event)}
                               className={`text-xs mt-0.5 px-1 py-0.5 rounded truncate cursor-pointer 
                                 ${event.category === "React Fundamentals" ? "bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300" : 
                                 event.category === "Node.js Backend" ? "bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300" : 
@@ -326,61 +333,154 @@ export default function ProgressPage() {
               <div className="text-sm text-muted-foreground mb-2">July - August 2025</div>
               
               {/* Monthly activity chart */}
-              <div className="h-64 flex items-end justify-between">
+              <div className="h-72 bg-muted/10 border border-border rounded-lg p-4 relative">
+                {/* Background grid lines */}
+                <div className="absolute inset-0 grid grid-cols-1">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={`grid-line-${i}`} className="border-t border-border w-full absolute" style={{ bottom: `${i * 25}%` }}></div>
+                  ))}
+                </div>
+                
+                <div className="h-full flex items-end justify-between">
                 {[
-                  {month: "Jul", week1: 4.5, week2: 6.2, week3: 5.8, week4: 8.0},
-                  {month: "Aug", week1: 6.8, week2: 7.5, week3: 9.3, week4: 2.5}
+                  {
+                    month: "Jul", 
+                    data: [
+                      { week: "Week 1", hours: 4.5, color: "from-blue-500 to-blue-600", lessons: 8 },
+                      { week: "Week 2", hours: 6.2, color: "from-indigo-500 to-indigo-600", lessons: 12 },
+                      { week: "Week 3", hours: 5.8, color: "from-purple-500 to-purple-600", lessons: 10 },
+                      { week: "Week 4", hours: 8.0, color: "from-pink-500 to-pink-600", lessons: 14 }
+                    ]
+                  },
+                  {
+                    month: "Aug", 
+                    data: [
+                      { week: "Week 1", hours: 6.8, color: "from-green-500 to-green-600", lessons: 11 },
+                      { week: "Week 2", hours: 7.5, color: "from-teal-500 to-teal-600", lessons: 13 },
+                      { week: "Week 3", hours: 9.3, color: "from-cyan-500 to-cyan-600", lessons: 16, current: true },
+                      { week: "Week 4", hours: 2.5, color: "from-blue-300 to-blue-400", lessons: 4, future: true }
+                    ]
+                  }
                 ].map((monthData, monthIndex) => (
                   <div key={monthIndex} className="flex-1 flex flex-col items-center">
                     <div className="w-full flex justify-around">
-                      {Object.entries(monthData)
-                        .filter(([key]) => key.startsWith('week'))
-                        .map(([week, hours], i) => {
-                          const isCurrentWeek = monthData.month === "Aug" && week === "week3";
-                          const isFutureWeek = monthData.month === "Aug" && week === "week4";
-                          const heightPercentage = (hours / 10) * 100;
-                          
-                          return (
-                            <div key={week} className="w-10 flex flex-col items-center">
+                      {monthData.data.map((weekData, weekIndex) => {
+                        // Ensure minimum height for visibility
+                        const heightPercentage = Math.max(5, (weekData.hours / 10) * 85);
+                        const lessonHeight = Math.max(5, (weekData.lessons / 20) * 85);
+                        
+                        return (
+                          <div key={`${monthData.month}-${weekData.week}`} className="flex flex-col items-center mx-1 group cursor-pointer relative">
+                            {/* Tooltip on hover - only rendered on client-side */}
+                            {isMounted && (
+                              <div className="absolute bottom-full mb-2 bg-background border border-border rounded-md p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 min-w-[120px]">
+                                <p className="text-xs font-medium">{monthData.month} - {weekData.week}</p>
+                                <div className="flex justify-between text-xs mt-1">
+                                  <span className="text-muted-foreground">Hours:</span>
+                                  <span>{weekData.hours}</span>
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Lessons:</span>
+                                  <span>{weekData.lessons}</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Bar chart */}
+                            <div className="flex items-end space-x-1">
+                              {/* Hours bar */}
                               <div 
-                                className={`w-full rounded-t ${isFutureWeek ? 'bg-primary/20' : 'bg-primary'}`} 
-                                style={{ height: `${heightPercentage}%` }}
+                                className={`w-7 rounded-t bg-gradient-to-b ${weekData.future ? 'from-primary/30 to-primary/20' : weekData.current ? 'from-primary to-primary' : weekData.color}`}
+                                style={{ 
+                                  height: `${heightPercentage}%`,
+                                  minHeight: '8px',
+                                  boxShadow: weekData.current ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
+                                }}
+                              >
+                                {/* Add a shine effect to current week */}
+                                {weekData.current && (
+                                  <div className="h-full w-full bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+                                )}
+                              </div>
+                              
+                              {/* Lessons bar */}
+                              <div 
+                                className={`w-3 rounded-t bg-gradient-to-b ${weekData.future ? 'from-green-300/30 to-green-300/20' : 'from-green-500 to-green-600'}`}
+                                style={{ 
+                                  height: `${lessonHeight}%`,
+                                  minHeight: '6px'
+                                }}
                               ></div>
-                              {i === 1 && (
-                                <div className="mt-2 text-xs text-muted-foreground">{monthData.month}</div>
-                              )}
                             </div>
-                          );
-                        })}
+                            
+                            <div className="mt-2 text-xs font-medium text-muted-foreground">
+                              {weekIndex === 0 ? `${monthData.month}-W1` : weekIndex === 3 ? `${monthData.month}-W4` : ""}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+                    <div className="mt-2 text-xs font-medium text-foreground">{monthData.month}</div>
                   </div>
                 ))}
+                </div>
+              </div>
+              
+              {/* Chart Legend */}
+              <div className="flex justify-center space-x-6">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 mr-2 bg-gradient-to-b from-blue-500 to-blue-600 rounded-sm"></div>
+                  <span className="text-xs text-muted-foreground">Hours Studied</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 mr-2 bg-gradient-to-b from-green-500 to-green-600 rounded-sm"></div>
+                  <span className="text-xs text-muted-foreground">Lessons Completed</span>
+                </div>
               </div>
               
               {/* All time stats */}
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Total Study Time</p>
-                  <p className="text-2xl font-bold">42 hours</p>
+                <div className="p-5 rounded-lg overflow-hidden relative bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-200 dark:border-blue-900/40">
+                  <div className="absolute inset-0 bg-grid-slate-100/50 [mask-image:linear-gradient(0deg,transparent,black)] dark:bg-grid-slate-700/50"></div>
+                  <div className="relative">
+                    <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400 mb-3" />
+                    <p className="text-2xl font-bold">42 hours</p>
+                    <p className="text-sm text-muted-foreground mt-1">Total Study Time</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Lessons Completed</p>
-                  <p className="text-2xl font-bold">32 lessons</p>
+                
+                <div className="p-5 rounded-lg overflow-hidden relative bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-200 dark:border-green-900/40">
+                  <div className="absolute inset-0 bg-grid-slate-100/50 [mask-image:linear-gradient(0deg,transparent,black)] dark:bg-grid-slate-700/50"></div>
+                  <div className="relative">
+                    <BookOpen className="h-6 w-6 text-green-600 dark:text-green-400 mb-3" />
+                    <p className="text-2xl font-bold">32 lessons</p>
+                    <p className="text-sm text-muted-foreground mt-1">Lessons Completed</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Study Sessions</p>
-                  <p className="text-2xl font-bold">18 sessions</p>
+                
+                <div className="p-5 rounded-lg overflow-hidden relative bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-200 dark:border-purple-900/40">
+                  <div className="absolute inset-0 bg-grid-slate-100/50 [mask-image:linear-gradient(0deg,transparent,black)] dark:bg-grid-slate-700/50"></div>
+                  <div className="relative">
+                    <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400 mb-3" />
+                    <p className="text-2xl font-bold">18 sessions</p>
+                    <p className="text-sm text-muted-foreground mt-1">Study Sessions</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Learning Streak</p>
-                  <p className="text-2xl font-bold">7 days</p>
+                
+                <div className="p-5 rounded-lg overflow-hidden relative bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-200 dark:border-amber-900/40">
+                  <div className="absolute inset-0 bg-grid-slate-100/50 [mask-image:linear-gradient(0deg,transparent,black)] dark:bg-grid-slate-700/50"></div>
+                  <div className="relative">
+                    <Zap className="h-6 w-6 text-amber-600 dark:text-amber-400 mb-3" />
+                    <p className="text-2xl font-bold">7 days</p>
+                    <p className="text-sm text-muted-foreground mt-1">Learning Streak</p>
+                  </div>
                 </div>
               </div>
             </div>
           )}
           
-          {/* Event Detail Popup */}
-          {selectedEvent && (
+          {/* Event Detail Popup - Only rendered on client-side */}
+          {isMounted && selectedEvent && (
             <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
               <div className="bg-background rounded-lg shadow-xl max-w-md w-full p-6">
                 <div className="flex justify-between items-start mb-4">
