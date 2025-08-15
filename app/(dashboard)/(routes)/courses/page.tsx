@@ -7,7 +7,7 @@ export default function CoursesPage() {
     <main className="container mx-auto px-4 py-8">
         <section className="mb-12">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground">My Courses</h1>
+            <h1 className="text-3xl font-bold text-foreground">Courses</h1>
             <div className="flex items-center space-x-4">
               <select className="bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                 <option value="all">All Courses</option>

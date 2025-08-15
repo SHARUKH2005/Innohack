@@ -93,7 +93,7 @@ export default function CourseDetails({ params }: CourseParams) {
       <div className="mb-8">
         <Link href="/courses" className="flex items-center text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to My Courses
+          Back to Courses
         </Link>
         
         <div className={`h-48 bg-gradient-to-br ${course.gradient} rounded-lg mb-6 relative`}>

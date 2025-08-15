@@ -18,7 +18,7 @@ export function Navbar({ title = "Learnify" }: NavbarProps) {
     },
     {
       href: "/courses",
-      label: "My Courses",
+      label: "Courses",
       active: pathname === "/courses",
     },
     {
