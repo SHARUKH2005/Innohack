@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/nextjs"
-import { BookOpen, BarChart3, Calendar, ArrowUpRight } from "lucide-react"
+import { BookOpen, BarChart3, Calendar, ArrowUpRight, Sun, Moon, CheckSquare, Award, Zap, Compass } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function ProgressPage() {
@@ -106,7 +106,7 @@ export default function ProgressPage() {
           </div>
         </section>
 
-        {/* Learning Time Chart */}
+        {/* Learning Activity Calendar */}
         <section className="mb-10 p-6 bg-card rounded-lg border border-border">
           <h2 className="text-xl font-bold text-foreground mb-4">Learning Activity</h2>
           <div className="flex items-center mb-6">
@@ -119,30 +119,82 @@ export default function ProgressPage() {
               <span className="text-muted-foreground">Completed Lessons</span>
             </div>
           </div>
-          <div className="h-64">
-            {/* Simulated Chart - Would be replaced with a real chart component */}
-            <div className="w-full h-full flex items-end">
-              {Array.from({ length: 30 }).map((_, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center justify-end">
-                  <div className="flex flex-col items-center mb-1">
-                    <div className="w-full max-w-[10px] bg-primary rounded-t h-[20px]" style={{ 
-                      height: `${Math.floor(Math.random() * 80) + 20}px`,
-                      opacity: index > 23 ? 0.5 : 1,
-                    }}></div>
-                    <div className="w-full max-w-[10px] bg-green-500 rounded-t h-[20px] mt-0.5" style={{ 
-                      height: `${Math.floor(Math.random() * 60) + 10}px`,
-                      opacity: index > 23 ? 0.5 : 1,
-                    }}></div>
-                  </div>
-                  {index % 5 === 0 && (
-                    <span className="text-xs text-muted-foreground mt-1">{index + 1}</span>
-                  )}
+          
+          {/* Calendar Grid */}
+          <div className="mb-4">
+            {/* Week days header */}
+            <div className="grid grid-cols-7 gap-1 mb-1">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                  {day}
                 </div>
               ))}
             </div>
+            
+            {/* Calendar body */}
+            <div className="grid grid-cols-7 gap-1">
+              {/* Empty spaces for start of month */}
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={`empty-start-${i}`} className="h-12 sm:h-16 rounded-md"></div>
+              ))}
+              
+              {/* Calendar days */}
+              {Array.from({ length: 31 }).map((_, index) => {
+                // Calculate activity metrics - more realistic pattern
+                const day = index + 1;
+                const isWeekend = (day + 2) % 7 === 0 || (day + 1) % 7 === 0;
+                const studyHours = isWeekend ? 2.5 : (day % 7 === 3 || day % 7 === 4) ? 1.5 : 0.8;
+                const lessonsCompleted = isWeekend ? 4 : (day % 7 === 3 || day % 7 === 4) ? 2 : 1;
+                const isCurrentDay = day === 15;
+                const isPastDay = day <= 15;
+                const opacity = isPastDay ? 1 : 0.4;
+                
+                return (
+                  <div 
+                    key={`day-${day}`} 
+                    className={`h-12 sm:h-16 rounded-md flex flex-col items-center justify-start p-1 border ${isCurrentDay ? 'border-primary' : 'border-border'} ${isPastDay ? '' : 'opacity-40'}`}
+                  >
+                    <span className={`text-xs font-medium mb-1 ${isCurrentDay ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {day}
+                    </span>
+                    
+                    {/* Activity indicators */}
+                    {isPastDay && (
+                      <div className="flex flex-col items-center justify-center flex-grow">
+                        <div className="flex items-center mb-1">
+                          <div className="w-full h-1.5 bg-primary rounded-full" style={{width: `${studyHours * 15}px`}}></div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-full h-1.5 bg-green-500 rounded-full" style={{width: `${lessonsCompleted * 8}px`}}></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex justify-center mt-2">
-            <span className="text-sm text-muted-foreground">Days of the Month</span>
+          
+          <div className="mt-4 flex flex-col items-center">
+            <span className="text-sm text-muted-foreground mb-2">August 2025</span>
+            <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-8 gap-y-1">
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 bg-primary/20 border border-primary rounded-sm"></div>
+                <span>0-1 Hours</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 bg-primary/40 border border-primary rounded-sm"></div>
+                <span>1-2 Hours</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 bg-primary/70 border border-primary rounded-sm"></div>
+                <span>2-3 Hours</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 mr-2 bg-primary border border-primary rounded-sm"></div>
+                <span>3+ Hours</span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -182,15 +234,15 @@ export default function ProgressPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {[
-              { name: "Early Bird", desc: "Complete 5 lessons before 9am", color: "bg-gradient-to-br from-yellow-400 to-orange-500", icon: "☀️" },
-              { name: "Night Owl", desc: "Study for 2 hours after 10pm", color: "bg-gradient-to-br from-indigo-500 to-blue-600", icon: "🌙" },
-              { name: "Consistent", desc: "Study for 7 days in a row", color: "bg-gradient-to-br from-green-400 to-teal-500", icon: "📆" },
-              { name: "Perfectionist", desc: "Score 100% on 3 quizzes", color: "bg-gradient-to-br from-purple-400 to-pink-500", icon: "🏆" },
-              { name: "Speed Demon", desc: "Complete a course in record time", color: "bg-gradient-to-br from-red-400 to-pink-600", icon: "⚡" },
-              { name: "Explorer", desc: "Try courses from 5 categories", color: "bg-gradient-to-br from-blue-400 to-emerald-500", icon: "🧭" },
+              { name: "Early Bird", desc: "Complete 5 lessons before 9am", color: "bg-gradient-to-br from-yellow-400 to-orange-500", icon: <Sun className="h-6 w-6" /> },
+              { name: "Night Owl", desc: "Study for 2 hours after 10pm", color: "bg-gradient-to-br from-indigo-500 to-blue-600", icon: <Moon className="h-6 w-6" /> },
+              { name: "Consistent", desc: "Study for 7 days in a row", color: "bg-gradient-to-br from-green-400 to-teal-500", icon: <Calendar className="h-6 w-6" /> },
+              { name: "Perfectionist", desc: "Score 100% on 3 quizzes", color: "bg-gradient-to-br from-purple-400 to-pink-500", icon: <Award className="h-6 w-6" /> },
+              { name: "Speed Demon", desc: "Complete a course in record time", color: "bg-gradient-to-br from-red-400 to-pink-600", icon: <Zap className="h-6 w-6" /> },
+              { name: "Explorer", desc: "Try courses from 5 categories", color: "bg-gradient-to-br from-blue-400 to-emerald-500", icon: <Compass className="h-6 w-6" /> },
             ].map((badge, index) => (
               <div key={index} className={`${index > 3 ? 'opacity-30' : ''} rounded-lg p-4 flex flex-col items-center justify-center text-center ${badge.color} text-white aspect-square hover:shadow-lg transition-shadow`}>
-                <span className="text-2xl mb-2">{badge.icon}</span>
+                <div className="mb-2">{badge.icon}</div>
                 <h3 className="font-medium text-sm mb-1">{badge.name}</h3>
                 <p className="text-xs opacity-90">{badge.desc}</p>
                 {index <= 3 && (
