@@ -237,6 +237,7 @@ export default function BrowsePage() {
                     discountedPrice={course.discountedPrice}
                     gradient={course.gradient}
                     featured={course.featured}
+                    skillLevel={course.skillLevel}
                     onFavoriteToggle={toggleFavorite}
                     initialFavorited={isFavorite(course.id)}
                   />

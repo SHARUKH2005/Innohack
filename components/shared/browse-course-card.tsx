@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, Bookmark, BookmarkCheck, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { CourseModal } from "@/components/shared/course-modal";
 
 export interface BrowseCourseCardProps {
   id: string;
@@ -17,6 +17,7 @@ export interface BrowseCourseCardProps {
   discountedPrice: number | null;
   gradient: string;
   featured: string | null;
+  skillLevel: string;
   onFavoriteToggle: (id: string, isFavorited: boolean) => void;
   initialFavorited?: boolean;
 }
@@ -33,10 +34,12 @@ export function BrowseCourseCard({
   discountedPrice,
   gradient = "from-blue-500 to-purple-600",
   featured,
+  skillLevel = "beginner",
   onFavoriteToggle,
   initialFavorited = false,
 }: BrowseCourseCardProps) {
   const [favorited, setFavorited] = useState(initialFavorited);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     setFavorited(initialFavorited);
@@ -48,6 +51,11 @@ export function BrowseCourseCard({
     const newState = !favorited;
     setFavorited(newState);
     onFavoriteToggle(id, newState);
+  };
+  
+  const openCourseModal = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsModalOpen(true);
   };
 
   // Define background color based on category for consistent appearance
@@ -149,9 +157,9 @@ export function BrowseCourseCard({
           </div>
         </div>
         <div className="flex space-x-3">
-          <Link href={`/courses/${id}`} className="flex-1">
-            <Button className="w-full">View Course</Button>
-          </Link>
+          <Button className="flex-1" onClick={openCourseModal}>
+            View Course
+          </Button>
           <Button 
             variant="outline" 
             size="icon"
@@ -164,6 +172,23 @@ export function BrowseCourseCard({
             }
           </Button>
         </div>
+        
+        {/* Course Modal */}
+        <CourseModal
+          id={id}
+          title={title}
+          description={description}
+          categoryLabel={categoryLabel}
+          totalHours={totalHours}
+          rating={rating}
+          price={price}
+          discountedPrice={discountedPrice}
+          gradient={gradient}
+          featured={featured}
+          skillLevel={skillLevel || "beginner"}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </div>
     </div>
   );
