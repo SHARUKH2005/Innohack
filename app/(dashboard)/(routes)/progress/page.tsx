@@ -5,6 +5,7 @@ import { BookOpen, BarChart3, Calendar, ArrowUpRight, Sun, Moon, CheckSquare, Aw
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
+import { AchievementModal } from "@/components/shared/achievement-modal"
 
 // Define the event type
 type LearningEvent = {
@@ -92,6 +93,19 @@ const EventDetailPopup = ({
   )
 }
 
+// Define the achievement type
+type Achievement = {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  earned: boolean;
+  earnedDate?: string;
+  progress?: number;
+  totalRequired?: number;
+};
+
 export default function ProgressPage() {
   // State for time period filter, event popup, and month/week navigation
   const [timePeriod, setTimePeriod] = useState<"weekly" | "monthly" | "allTime">("monthly")
@@ -99,8 +113,141 @@ export default function ProgressPage() {
   const [isMounted, setIsMounted] = useState(false)
   const [currentMonth, setCurrentMonth] = useState("Aug")
   const [currentWeek, setCurrentWeek] = useState<"week1" | "week2" | "week3" | "week4">("week3")
+  const [isAchievementsModalOpen, setIsAchievementsModalOpen] = useState(false)
   // Fixed to 2025 as per requirement
   const currentYear = 2025
+  
+  // Achievement data
+  const achievements: Achievement[] = [
+    { 
+      id: "early-bird", 
+      name: "Early Bird", 
+      description: "Complete 5 lessons before 9am", 
+      color: "bg-gradient-to-br from-yellow-400 to-orange-500", 
+      icon: <Sun className="h-6 w-6" />, 
+      earned: true,
+      earnedDate: "Aug 10, 2025",
+      progress: 5,
+      totalRequired: 5
+    },
+    { 
+      id: "night-owl", 
+      name: "Night Owl", 
+      description: "Study for 2 hours after 10pm", 
+      color: "bg-gradient-to-br from-indigo-500 to-blue-600", 
+      icon: <Moon className="h-6 w-6" />, 
+      earned: true,
+      earnedDate: "Jul 15, 2025",
+      progress: 2,
+      totalRequired: 2
+    },
+    { 
+      id: "consistent", 
+      name: "Consistent", 
+      description: "Study for 7 days in a row", 
+      color: "bg-gradient-to-br from-green-400 to-teal-500", 
+      icon: <Calendar className="h-6 w-6" />, 
+      earned: true,
+      earnedDate: "Aug 7, 2025",
+      progress: 7,
+      totalRequired: 7
+    },
+    { 
+      id: "perfectionist", 
+      name: "Perfectionist", 
+      description: "Score 100% on 3 quizzes", 
+      color: "bg-gradient-to-br from-purple-400 to-pink-500", 
+      icon: <Award className="h-6 w-6" />, 
+      earned: true,
+      earnedDate: "Jul 30, 2025",
+      progress: 3,
+      totalRequired: 3
+    },
+    { 
+      id: "speed-demon", 
+      name: "Speed Demon", 
+      description: "Complete a course in record time", 
+      color: "bg-gradient-to-br from-red-400 to-pink-600", 
+      icon: <Zap className="h-6 w-6" />, 
+      earned: false,
+      progress: 0,
+      totalRequired: 1
+    },
+    { 
+      id: "explorer", 
+      name: "Explorer", 
+      description: "Try courses from 5 categories", 
+      color: "bg-gradient-to-br from-blue-400 to-emerald-500", 
+      icon: <Compass className="h-6 w-6" />, 
+      earned: false,
+      progress: 4,
+      totalRequired: 5
+    },
+    {
+      id: "marathon",
+      name: "Marathon Learner",
+      description: "Study for 4 hours in one session",
+      color: "bg-gradient-to-br from-orange-300 to-red-500",
+      icon: <Award className="h-6 w-6" />,
+      earned: true,
+      earnedDate: "Jul 22, 2025",
+      progress: 4,
+      totalRequired: 4
+    },
+    {
+      id: "weekend-warrior",
+      name: "Weekend Warrior",
+      description: "Complete 10 lessons on weekends",
+      color: "bg-gradient-to-br from-violet-400 to-indigo-600",
+      icon: <Award className="h-6 w-6" />,
+      earned: true,
+      earnedDate: "Jun 15, 2025",
+      progress: 10,
+      totalRequired: 10
+    },
+    {
+      id: "challenge-master",
+      name: "Challenge Master",
+      description: "Complete 3 coding challenges",
+      color: "bg-gradient-to-br from-cyan-400 to-blue-500",
+      icon: <Award className="h-6 w-6" />,
+      earned: false,
+      progress: 1,
+      totalRequired: 3
+    },
+    {
+      id: "team-player",
+      name: "Team Player",
+      description: "Participate in 2 group projects",
+      color: "bg-gradient-to-br from-pink-400 to-purple-600",
+      icon: <Award className="h-6 w-6" />,
+      earned: false,
+      progress: 0,
+      totalRequired: 2
+    },
+    {
+      id: "feedback-champion",
+      name: "Feedback Champion",
+      description: "Provide feedback on 5 courses",
+      color: "bg-gradient-to-br from-amber-400 to-orange-600",
+      icon: <Award className="h-6 w-6" />,
+      earned: true,
+      earnedDate: "Aug 1, 2025",
+      progress: 5,
+      totalRequired: 5
+    },
+    {
+      id: "early-adopter",
+      name: "Early Adopter",
+      description: "Try a new course within a week of launch",
+      color: "bg-gradient-to-br from-lime-400 to-green-600",
+      icon: <Award className="h-6 w-6" />,
+      earned: true,
+      earnedDate: "Jun 28, 2025",
+      progress: 1,
+      totalRequired: 1
+    }
+  ]
   
   // Only render client-side components after mount to prevent hydration mismatch
   useEffect(() => {
@@ -1013,27 +1160,37 @@ export default function ProgressPage() {
         <section className="mb-10">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-foreground">Your Achievements</h2>
-            <Button variant="link" className="text-primary">View All</Button>
+            <Button 
+              variant="link" 
+              className="text-primary"
+              onClick={() => setIsAchievementsModalOpen(true)}
+            >
+              View All
+            </Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              { name: "Early Bird", desc: "Complete 5 lessons before 9am", color: "bg-gradient-to-br from-yellow-400 to-orange-500", icon: <Sun className="h-6 w-6" /> },
-              { name: "Night Owl", desc: "Study for 2 hours after 10pm", color: "bg-gradient-to-br from-indigo-500 to-blue-600", icon: <Moon className="h-6 w-6" /> },
-              { name: "Consistent", desc: "Study for 7 days in a row", color: "bg-gradient-to-br from-green-400 to-teal-500", icon: <Calendar className="h-6 w-6" /> },
-              { name: "Perfectionist", desc: "Score 100% on 3 quizzes", color: "bg-gradient-to-br from-purple-400 to-pink-500", icon: <Award className="h-6 w-6" /> },
-              { name: "Speed Demon", desc: "Complete a course in record time", color: "bg-gradient-to-br from-red-400 to-pink-600", icon: <Zap className="h-6 w-6" /> },
-              { name: "Explorer", desc: "Try courses from 5 categories", color: "bg-gradient-to-br from-blue-400 to-emerald-500", icon: <Compass className="h-6 w-6" /> },
-            ].map((badge, index) => (
-              <div key={index} className={`${index > 3 ? 'opacity-30' : ''} rounded-lg p-4 flex flex-col items-center justify-center text-center ${badge.color} text-white aspect-square hover:shadow-lg transition-shadow`}>
-                <div className="mb-2">{badge.icon}</div>
-                <h3 className="font-medium text-sm mb-1">{badge.name}</h3>
-                <p className="text-xs opacity-90">{badge.desc}</p>
-                {index <= 3 && (
+            {achievements.slice(0, 6).map((achievement, index) => (
+              <div 
+                key={achievement.id} 
+                className={`${index > 3 ? 'opacity-30' : ''} rounded-lg p-4 flex flex-col items-center justify-center text-center ${achievement.color} text-white aspect-square hover:shadow-lg transition-shadow cursor-pointer`}
+                onClick={() => setIsAchievementsModalOpen(true)}
+              >
+                <div className="mb-2">{achievement.icon}</div>
+                <h3 className="font-medium text-sm mb-1">{achievement.name}</h3>
+                <p className="text-xs opacity-90">{achievement.description}</p>
+                {achievement.earned && index <= 3 && (
                   <span className="mt-2 px-2 py-0.5 bg-white/20 rounded-full text-[10px]">Earned</span>
                 )}
               </div>
             ))}
           </div>
+          
+          {/* Achievement Modal */}
+          <AchievementModal 
+            isOpen={isAchievementsModalOpen}
+            onClose={() => setIsAchievementsModalOpen(false)}
+            achievements={achievements}
+          />
         </section>
 
         {/* Learning Goals */}
