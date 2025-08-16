@@ -85,7 +85,7 @@ export const AchievementModal = ({
           ))}
         </div>
         <DialogFooter className="p-6 pt-0">
-          <Button variant="outline" onClick={onClose}>Close</Button>
+          {/* Close button removed as requested */}
         </DialogFooter>
       </DialogContent>
     </Dialog>

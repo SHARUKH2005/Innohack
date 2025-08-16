@@ -5,7 +5,19 @@ import { BookOpen, BarChart3, Calendar, ArrowUpRight, Sun, Moon, CheckSquare, Aw
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
-import { AchievementModal } from "@/components/shared/achievement-modal"
+
+// Import modals with dynamic import to avoid hydration issues
+const AchievementModal = dynamic(() => import("@/components/shared/achievement-modal").then(mod => ({ default: mod.AchievementModal })), { 
+  ssr: false 
+})
+
+const GoalModal = dynamic(() => import("@/components/shared/goal-modal").then(mod => ({ default: mod.GoalModal })), { 
+  ssr: false 
+})
+
+const ActiveGoalModal = dynamic(() => import("@/components/shared/active-goal-modal").then(mod => ({ default: mod.ActiveGoalModal })), { 
+  ssr: false 
+})
 
 // Define the event type
 type LearningEvent = {
@@ -20,7 +32,7 @@ type LearningEvent = {
 };
 
 // Client-side only component to fix hydration issues
-const EventDetailPopup = ({ 
+const EventDetailPopup = dynamic(() => Promise.resolve(({ 
   event, 
   onClose 
 }: { 
@@ -91,7 +103,7 @@ const EventDetailPopup = ({
       </div>
     </div>
   )
-}
+}), { ssr: false })
 
 // Define the achievement type
 type Achievement = {
@@ -114,6 +126,8 @@ export default function ProgressPage() {
   const [currentMonth, setCurrentMonth] = useState("Aug")
   const [currentWeek, setCurrentWeek] = useState<"week1" | "week2" | "week3" | "week4">("week3")
   const [isAchievementsModalOpen, setIsAchievementsModalOpen] = useState(false)
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
+  const [selectedGoal, setSelectedGoal] = useState<number | null>(null)
   // Fixed to 2025 as per requirement
   const currentYear = 2025
   
@@ -1119,7 +1133,7 @@ export default function ProgressPage() {
           )}
           
           {/* Event Detail Popup - Using dynamic import to prevent hydration issues */}
-          {isMounted && selectedEvent && (
+          {selectedEvent && (
             <EventDetailPopup 
               event={selectedEvent} 
               onClose={() => setSelectedEvent(null)} 
@@ -1197,72 +1211,95 @@ export default function ProgressPage() {
         <section>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-foreground">Your Learning Goals</h2>
-            <Button>Set New Goal</Button>
+            <Button onClick={() => setIsGoalModalOpen(true)}>Set New Goal</Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-card rounded-lg border border-border p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-medium text-foreground">Complete React Course</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Finish all lessons by August 25</p>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-full">
+            {[
+              {
+                id: 1,
+                title: "Complete React Course",
+                description: "Finish all lessons by August 25",
+                icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                </div>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 mb-2">
-                <div className="bg-primary h-2 rounded-full" style={{ width: '75%' }}></div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-primary font-medium">75% complete</span>
-                <span className="text-muted-foreground">10 days left</span>
-              </div>
-            </div>
-            
-            <div className="bg-card rounded-lg border border-border p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-medium text-foreground">Study 2 hours daily</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Maintain consistent study schedule</p>
-                </div>
-                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
+                ),
+                progress: 75,
+                timeLeft: "10 days left",
+                color: "bg-primary"
+              },
+              {
+                id: 2,
+                title: "Study 2 hours daily",
+                description: "Maintain consistent study schedule",
+                icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                </div>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 mb-2">
-                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '60%' }}></div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-yellow-600 dark:text-yellow-400 font-medium">12 of 30 days</span>
-                <span className="text-muted-foreground">18 days left</span>
-              </div>
-            </div>
-            
-            <div className="bg-card rounded-lg border border-border p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-medium text-foreground">Complete 5 Courses</h3>
-                  <p className="text-sm text-muted-foreground mt-1">By the end of this quarter</p>
-                </div>
-                <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-full">
+                ),
+                progress: 40,
+                progressLabel: "12 of 30 days",
+                timeLeft: "18 days left",
+                color: "bg-yellow-500",
+                textColor: "text-yellow-600 dark:text-yellow-400",
+                iconBg: "bg-yellow-100 dark:bg-yellow-900/20"
+              },
+              {
+                id: 3,
+                title: "Complete 5 Courses",
+                description: "By the end of this quarter",
+                icon: (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                ),
+                progress: 40,
+                progressLabel: "2 of 5 courses",
+                timeLeft: "45 days left",
+                color: "bg-green-500",
+                textColor: "text-green-600 dark:text-green-400",
+                iconBg: "bg-green-100 dark:bg-green-900/20"
+              }
+            ].map((goal) => (
+              <div 
+                key={goal.id}
+                className="bg-card rounded-lg border border-border p-6 transition-all hover:shadow-md cursor-pointer"
+                onClick={() => setSelectedGoal(goal.id)}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-medium text-foreground">{goal.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{goal.description}</p>
+                  </div>
+                  <div className={`p-2 ${goal.iconBg || 'bg-primary/10'} rounded-full`}>
+                    {goal.icon}
+                  </div>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2 mb-2">
+                  <div className={`${goal.color} h-2 rounded-full`} style={{ width: `${goal.progress}%` }}></div>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className={goal.textColor || "text-primary font-medium"}>
+                    {goal.progressLabel || `${goal.progress}% complete`}
+                  </span>
+                  <span className="text-muted-foreground">{goal.timeLeft}</span>
                 </div>
               </div>
-              <div className="w-full bg-muted rounded-full h-2 mb-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: '40%' }}></div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-green-600 dark:text-green-400 font-medium">2 of 5 courses</span>
-                <span className="text-muted-foreground">45 days left</span>
-              </div>
-            </div>
+            ))}
           </div>
+          
+          {/* Goal Modals */}
+          <GoalModal 
+            isOpen={isGoalModalOpen}
+            onClose={() => setIsGoalModalOpen(false)}
+          />
+          
+          {/* Active Goal Detail Modal */}
+          <ActiveGoalModal 
+            isOpen={selectedGoal !== null}
+            onClose={() => setSelectedGoal(null)}
+            goalId={selectedGoal}
+          />
         </section>
       </main>
     </div>
