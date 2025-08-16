@@ -19,6 +19,10 @@ const ActiveGoalModal = dynamic(() => import("@/components/shared/active-goal-mo
   ssr: false 
 })
 
+const CourseModal = dynamic(() => import("@/components/shared/course-modal").then(mod => ({ default: mod.CourseModal })), {
+  ssr: false
+})
+
 // Define the event type
 type LearningEvent = {
   day: number;
@@ -128,6 +132,7 @@ export default function ProgressPage() {
   const [isAchievementsModalOpen, setIsAchievementsModalOpen] = useState(false)
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
   const [selectedGoal, setSelectedGoal] = useState<number | null>(null)
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null)
   // Fixed to 2025 as per requirement
   const currentYear = 2025
   
@@ -1147,13 +1152,97 @@ export default function ProgressPage() {
           <h2 className="text-xl font-bold text-foreground mb-6">Course Progress</h2>
           <div className="space-y-4">
             {[
-              { name: "React Fundamentals", progress: 75, color: "bg-blue-500", remaining: "3h left", lessons: "24/32 lessons" },
-              { name: "UI/UX Design", progress: 20, color: "bg-orange-500", remaining: "12h left", lessons: "8/40 lessons" },
-              { name: "Node.js Backend", progress: 45, color: "bg-indigo-500", remaining: "8h left", lessons: "15/32 lessons" },
-              { name: "Advanced JavaScript", progress: 90, color: "bg-yellow-500", remaining: "1h left", lessons: "27/30 lessons" },
-              { name: "CSS Animations", progress: 60, color: "bg-green-500", remaining: "4h left", lessons: "12/20 lessons" }
+              { 
+                id: "react-fundamentals",
+                name: "React Fundamentals", 
+                progress: 75, 
+                color: "bg-blue-500", 
+                gradient: "from-blue-500 to-purple-600",
+                remaining: "3h left", 
+                lessons: "24/32 lessons",
+                description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.",
+                categoryLabel: "Programming",
+                totalHours: 8,
+                rating: 4.8,
+                price: 59.99,
+                discountedPrice: null,
+                featured: "bestseller",
+                skillLevel: "intermediate"
+              },
+              { 
+                id: "ui-ux-design",
+                name: "UI/UX Design", 
+                progress: 20, 
+                color: "bg-orange-500", 
+                gradient: "from-pink-500 to-red-500",
+                remaining: "12h left", 
+                lessons: "8/40 lessons",
+                description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.",
+                categoryLabel: "Design",
+                totalHours: 15,
+                rating: 4.7,
+                price: 69.99,
+                discountedPrice: 49.99,
+                featured: null,
+                skillLevel: "beginner"
+              },
+              { 
+                id: "node-backend",
+                name: "Node.js Backend", 
+                progress: 45, 
+                color: "bg-indigo-500", 
+                gradient: "from-indigo-500 to-blue-600",
+                remaining: "8h left", 
+                lessons: "15/32 lessons",
+                description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.",
+                categoryLabel: "IT & Software",
+                totalHours: 14,
+                rating: 4.6,
+                price: 79.99,
+                discountedPrice: 59.99,
+                featured: "new",
+                skillLevel: "intermediate"
+              },
+              { 
+                id: "advanced-js",
+                name: "Advanced JavaScript", 
+                progress: 90, 
+                color: "bg-yellow-500", 
+                gradient: "from-yellow-500 to-orange-500",
+                remaining: "1h left", 
+                lessons: "27/30 lessons",
+                description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.",
+                categoryLabel: "Programming",
+                totalHours: 10,
+                rating: 4.9,
+                price: 89.99,
+                discountedPrice: 69.99,
+                featured: "top rated",
+                skillLevel: "advanced"
+              },
+              { 
+                id: "css-animations",
+                name: "CSS Animations", 
+                progress: 60, 
+                color: "bg-green-500", 
+                gradient: "from-green-500 to-teal-500",
+                remaining: "4h left", 
+                lessons: "12/20 lessons",
+                description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.",
+                categoryLabel: "Design",
+                totalHours: 6,
+                rating: 4.5,
+                price: 49.99,
+                discountedPrice: 39.99,
+                featured: null,
+                skillLevel: "intermediate"
+              }
             ].map((course, index) => (
-              <div key={index} className="bg-card rounded-lg border border-border p-4">
+              <div 
+                key={index} 
+                className="bg-card rounded-lg border border-border p-4 cursor-pointer transition-all hover:border-primary hover:shadow-sm"
+                onClick={() => setSelectedCourse(course.id)}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-foreground">{course.name}</h3>
                   <span className="text-sm text-muted-foreground">{course.progress}% complete</span>
@@ -1300,6 +1389,85 @@ export default function ProgressPage() {
             onClose={() => setSelectedGoal(null)}
             goalId={selectedGoal}
           />
+          
+          {/* Selected Course Modal */}
+          {selectedCourse && (
+            <CourseModal
+              id={selectedCourse}
+              isOpen={selectedCourse !== null}
+              onClose={() => setSelectedCourse(null)}
+              title={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.name || ""}
+              description={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.description || ""}
+              categoryLabel={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.categoryLabel || ""}
+              totalHours={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.totalHours || 0}
+              rating={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.rating || 0}
+              price={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.price || 0}
+              discountedPrice={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.discountedPrice || null}
+              gradient={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.gradient || ""}
+              featured={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.featured || null}
+              skillLevel={[
+                { id: "react-fundamentals", name: "React Fundamentals", description: "Learn the fundamentals of React, including components, props, state, and hooks. Build real-world applications with React.", categoryLabel: "Programming", totalHours: 8, rating: 4.8, price: 59.99, discountedPrice: null, gradient: "from-blue-500 to-purple-600", featured: "bestseller", skillLevel: "intermediate" },
+                { id: "ui-ux-design", name: "UI/UX Design", description: "Master the principles of UI/UX design. Learn to create beautiful, functional, and user-friendly interfaces.", categoryLabel: "Design", totalHours: 15, rating: 4.7, price: 69.99, discountedPrice: 49.99, gradient: "from-pink-500 to-red-500", featured: null, skillLevel: "beginner" },
+                { id: "node-backend", name: "Node.js Backend", description: "Build scalable backend services with Node.js. Learn Express, MongoDB, and RESTful API development.", categoryLabel: "IT & Software", totalHours: 14, rating: 4.6, price: 79.99, discountedPrice: 59.99, gradient: "from-indigo-500 to-blue-600", featured: "new", skillLevel: "intermediate" },
+                { id: "advanced-js", name: "Advanced JavaScript", description: "Deep dive into advanced JavaScript concepts including closures, prototypes, async programming, and modern ES6+ features.", categoryLabel: "Programming", totalHours: 10, rating: 4.9, price: 89.99, discountedPrice: 69.99, gradient: "from-yellow-500 to-orange-500", featured: "top rated", skillLevel: "advanced" },
+                { id: "css-animations", name: "CSS Animations", description: "Learn to create stunning animations with CSS. Master transitions, keyframes, and complex motion effects.", categoryLabel: "Design", totalHours: 6, rating: 4.5, price: 49.99, discountedPrice: 39.99, gradient: "from-green-500 to-teal-500", featured: null, skillLevel: "intermediate" }
+              ].find(course => course.id === selectedCourse)?.skillLevel || ""}
+            />
+          )}
         </section>
       </main>
     </div>

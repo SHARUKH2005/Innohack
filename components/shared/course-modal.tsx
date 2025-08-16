@@ -250,7 +250,7 @@ export function CourseModal({
                       </span>
                     )}
                   </div>
-                  <Button className="px-8">Enroll Now</Button>
+                  <Button className="px-8">Continue Learning</Button>
                 </div>
               </div>
             </div>
