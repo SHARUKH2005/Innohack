@@ -4,6 +4,9 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: true,
   
+  // Handle output settings
+  output: 'standalone',
+  
   // Skip build if there are TypeScript errors
   typescript: {
     ignoreBuildErrors: true,

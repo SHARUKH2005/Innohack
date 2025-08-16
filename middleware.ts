@@ -5,29 +5,38 @@ export default clerkMiddleware((auth, req) => {
   const { userId } = auth();
   const path = req.nextUrl.pathname;
   
-  // Handle the landing page route
+  // Special handling for the root/index route
   if (path === "/") {
     // If user is authenticated, redirect to dashboard
     if (userId) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
-    // If not authenticated, show the landing page
+    // Otherwise show the landing page
     return NextResponse.next();
   }
   
-  // Handle other public routes
-  if (path.startsWith("/sign-in") || path.startsWith("/sign-up")) {
-    // If user is already authenticated and on auth routes, redirect to dashboard
-    if (userId) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-    return NextResponse.next();
+  // Special handling for the (dashboard)/(routes) route - unlikely to match directly in URL
+  if (path.includes("(dashboard)") || path.includes("(routes)")) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
-  
-  // For protected routes, make sure the user is authenticated
-  auth().protect();
+
+  // If the user is on an auth page but already signed in, redirect to dashboard
+  if ((path.startsWith("/sign-in") || path.startsWith("/sign-up")) && userId) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // If the user is on a protected route but not signed in, redirect to sign-in
+  if ((path.startsWith("/dashboard") || 
+       path.startsWith("/browse") || 
+       path.startsWith("/community") || 
+       path.startsWith("/courses") || 
+       path.startsWith("/progress")) && !userId) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
+  return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!.+.[w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!.*\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 };
