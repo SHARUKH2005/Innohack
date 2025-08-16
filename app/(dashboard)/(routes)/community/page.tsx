@@ -5,7 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Users, Search, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  MessageCircle, Users, Search, MessageSquare, 
+  ChevronDown, ChevronUp, X, Pencil 
+} from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function CommunityPage() {
   // State for discussions data
@@ -16,6 +28,11 @@ export default function CommunityPage() {
   
   // State for new comments
   const [newComments, setNewComments] = useState<Record<string, string>>({});
+  
+  // State for the new topic modal
+  const [isNewTopicModalOpen, setIsNewTopicModalOpen] = useState(false);
+  const [newTopicTitle, setNewTopicTitle] = useState('');
+  const [newTopicContent, setNewTopicContent] = useState('');
   
   // Toggle comments visibility for a discussion
   const toggleDiscussionComments = (discussionId: string) => {
@@ -64,6 +81,30 @@ export default function CommunityPage() {
       [discussionId]: ""
     }));
   };
+  
+  // Create a new topic
+  const createNewTopic = () => {
+    if (!newTopicTitle.trim() || !newTopicContent.trim()) return;
+    
+    const newTopic = {
+      id: `topic-${Date.now()}`,
+      title: newTopicTitle,
+      excerpt: newTopicContent,
+      author: "You",
+      date: "Just now",
+      comments: []
+    };
+    
+    // Add the new topic to the top of the discussions list
+    setDiscussionData(prevData => [newTopic, ...prevData]);
+    
+    // Reset the form fields
+    setNewTopicTitle('');
+    setNewTopicContent('');
+    
+    // Close the modal
+    setIsNewTopicModalOpen(false);
+  };
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-8">Community</h1>
@@ -88,8 +129,75 @@ export default function CommunityPage() {
                 <Search className="h-4 w-4 mr-2" />
                 Search
               </Button>
-              <Button variant="default">New Topic</Button>
+              <Button 
+                variant="default" 
+                onClick={() => setIsNewTopicModalOpen(true)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                New Topic
+              </Button>
             </div>
+            
+            {/* New Topic Modal */}
+            <Dialog open={isNewTopicModalOpen} onOpenChange={setIsNewTopicModalOpen}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle className="text-xl">Create New Discussion Topic</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                      Y
+                    </div>
+                    <div>
+                      <p className="font-medium">You</p>
+                      <p className="text-xs text-muted-foreground">Your post will appear at the top of discussions</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="topic-title" className="text-sm font-medium">
+                      Title
+                    </label>
+                    <Input
+                      id="topic-title"
+                      placeholder="What would you like to discuss?"
+                      value={newTopicTitle}
+                      onChange={(e) => setNewTopicTitle(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="topic-content" className="text-sm font-medium">
+                      Content
+                    </label>
+                    <Textarea
+                      id="topic-content"
+                      placeholder="Share details about your topic..."
+                      className="min-h-[120px]"
+                      value={newTopicContent}
+                      onChange={(e) => setNewTopicContent(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsNewTopicModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={createNewTopic}
+                    disabled={!newTopicTitle.trim() || !newTopicContent.trim()}
+                  >
+                    Post Topic
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             
             <div className="space-y-4">
               {discussionData.map((discussion) => (
