@@ -1,3 +1,18 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "redirects": [
+    { 
+      "source": "/",
+      "has": [
+        {
+          "type": "cookie", 
+          "key": "__clerk_client_jwt", 
+          "value": "(?<jwt>.*)"
+        }
+      ],
+      "destination": "/dashboard", 
+      "permanent": false
+    }
+  ],
+  "rewrites": []
 }
