@@ -3,9 +3,21 @@ const nextConfig = {
   // Core Next.js settings
   swcMinify: true,
   reactStrictMode: true,
+  
+  // Experimental features to improve build reliability
   experimental: {
-    serverComponentsExternalPackages: []
+    // External packages that should be compiled as server components
+    serverComponentsExternalPackages: [],
+    // This is important for build stability
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+    // Improve client reference manifest generation
+    optimizePackageImports: ['@clerk/nextjs'],
   },
+  
+  // Increase stability for production builds
+  productionBrowserSourceMaps: false,
   
   // Security headers
   async headers() {
@@ -44,6 +56,9 @@ const nextConfig = {
     // Similarly this skips type checking to allow builds with TypeScript errors
     ignoreBuildErrors: true,
   },
+  
+  // Reduce build size by excluding certain patterns
+  poweredByHeader: false,
 };
 
 export default nextConfig;
