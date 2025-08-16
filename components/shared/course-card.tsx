@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useFavorites } from "@/lib/hooks/use-favorites";
 
 export interface CourseCardProps {
   id: string;
@@ -28,12 +29,21 @@ export function CourseCard({
   statusLabel,
   statusColor,
 }: CourseCardProps) {
+  // Use the favorites hook
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [bookmarked, setBookmarked] = useState(false);
+  
+  // Initialize bookmarked state from favorites
+  useEffect(() => {
+    setBookmarked(isFavorite(id));
+  }, [id, isFavorite]);
 
   const toggleBookmark = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setBookmarked(!bookmarked);
+    const newState = !bookmarked;
+    setBookmarked(newState);
+    toggleFavorite(id);
   };
 
   return (
@@ -75,10 +85,10 @@ export function CourseCard({
               variant="outline" 
               size="icon" 
               onClick={toggleBookmark}
-              className="transition-colors"
+              className={`transition-colors ${bookmarked ? "text-primary" : ""}`}
             >
               {bookmarked ? 
-                <BookmarkCheck className="h-4 w-4 text-primary" /> : 
+                <BookmarkCheck className="h-4 w-4" /> : 
                 <Bookmark className="h-4 w-4" />
               }
             </Button>
