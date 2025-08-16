@@ -12,9 +12,9 @@ export function Navbar({ title = "Learnify" }: NavbarProps) {
 
   const routes = [
     {
-      href: "/",
+      href: "/dashboard",
       label: "Dashboard",
-      active: pathname === "/",
+      active: pathname === "/" || pathname === "/dashboard",
     },
     {
       href: "/courses",

@@ -5,12 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { CourseCard } from "@/components/shared/course-card";
 
-import { redirect } from 'next/navigation';
-
-export default function Home() {
-  // Redirect to the dashboard page
-  redirect('/dashboard');
-  
+// This is a copy of the main dashboard page, but at a different route
+export default function DashboardPage() {
   return (
     <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
