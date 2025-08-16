@@ -103,7 +103,6 @@ next-env.d.ts
 .envrc
 
 # API Keys and Secrets - CRITICAL SECURITY
-.env.example
 config/secrets.yml
 config/database.yml
 *.key

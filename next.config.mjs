@@ -7,16 +7,6 @@ const nextConfig = {
   // Handle output settings
   output: 'standalone',
   
-  // Skip build if there are TypeScript errors
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  
-  // Skip ESLint during builds
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  
   // Disable source maps in production for better performance
   productionBrowserSourceMaps: false,
   
