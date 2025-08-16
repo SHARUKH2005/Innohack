@@ -3,6 +3,9 @@ const nextConfig = {
   // Core Next.js settings
   swcMinify: true,
   reactStrictMode: true,
+  experimental: {
+    serverComponentsExternalPackages: []
+  },
   
   // Security headers
   async headers() {
