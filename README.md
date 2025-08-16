@@ -1,8 +1,12 @@
 # Learnify
 
-![Next.js](https://img.shields.io/badge/Next.js-14.0.0-blue?style=flat-square&logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?style=flat-square&logo=typescript) ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.3.0-blue?style=flat-square&logo=tailwind-css) ![Clerk](https://img.shields.io/badge/Clerk-Authentication-blue?style=flat-square&logo=clerk) ![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green?style=flat-square&logo=node.js)
+![Next.js](https://img.shields.io/badge/Next.js-14.0.0-blue?style=flat-square&logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?style=flat-square&logo=typescript) ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.3.0-blue?style=flat-square&logo=tailwind-css) ![Clerk](https://img.shields.io/badge/Clerk-Authentication-blue?style=flat-square&logo=clerk) ![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green?style=flat-square&logo=node.js) ![Vercel](https://img.shields.io/badge/Vercel-Hosting-black?style=flat-square&logo=vercel) ![React](https://img.shields.io/badge/React-18.0.0-blue?style=flat-square&logo=react) ![PostCSS](https://img.shields.io/badge/PostCSS-CSS%20Processing-red?style=flat-square&logo=postcss) ![Serverless](https://img.shields.io/badge/Serverless-Functions-orange?style=flat-square&logo=serverless)
 
 A professional-grade Learning Management System (LMS) built with modern web technologies. Learnify is designed to provide a seamless and secure learning experience for users, featuring robust authentication, interactive course management, and comprehensive progress tracking.
+
+### Live URL
+
+[https://learnify-new-1.vercel.app/dashboard](https://learnify-new-1.vercel.app/dashboard)
 
 ---
 
@@ -122,41 +126,42 @@ Learnify is a full-stack web application leveraging the following technologies:
 
 ---
 
-## Libraries and Tools Used
+## Deployment
 
-- **Next.js**: Framework for React applications.
-- **TypeScript**: Static typing for JavaScript.
-- **Tailwind CSS**: Utility-first CSS framework.
-- **Clerk**: Authentication and user management.
-- **React**: Component-based UI library.
-- **PostCSS**: CSS processing.
+Learnify is deployed on Vercel, a platform optimized for Next.js applications. Vercel provides seamless integration with GitHub, automatic deployments, and serverless functions.
+
+### Live Demo
+
+You can access the live application here:
+
+[Learnify Dashboard](https://learnify-new-1.vercel.app/dashboard){:target="_blank"}
+
+### Hosting Details
+
+- **Platform**: Vercel
+- **Domain**: [https://learnify-new-1.vercel.app/dashboard](https://learnify-new-1.vercel.app/dashboard)
+- **Features**:
+  - Automatic deployments from GitHub
+  - Serverless functions for backend logic
+  - Free SSL certificates
+  - Global CDN for fast content delivery
+
+---
+
+## Libraries and Tools Used for Hosting
+
+- **Vercel**: For hosting and deployment
+- **GitHub**: Version control and CI/CD integration
+- **Next.js**: Framework for server-side rendering and static site generation
+- **Clerk**: Authentication and user management
+- **Tailwind CSS**: Styling framework
+- **Node.js**: Backend runtime
 
 ---
 
 ## Disclaimer
 
 This project is provided "as is" without any warranty. Use at your own risk. The authors are not responsible for any issues or damages arising from the use of this software.
-
----
-
-## Future Enhancements
-
-- **Mobile Apps**: Native iOS and Android applications.
-- **Advanced Analytics**: Detailed learning insights.
-- **Content Creation Tools**: Enable instructors to create and manage courses.
-- **Certification**: Issue certificates upon course completion.
-
----
-
-## Why This Project Was Created
-
-Learnify was developed as a hands-on project to deepen the understanding of building a modern, functional login system that is both frontend-friendly and mobile-responsive. The goal was to create a seamless user experience while integrating essential features such as:
-
-- **Email Notifications**: Automated email notifications for user registration and password resets, ensuring a smooth onboarding and account recovery process.
-- **Clerk Integration**: Leveraging Clerk for secure and scalable authentication, including social logins and session management.
-- **Mobile-Friendly Design**: Ensuring the application is fully responsive and accessible across devices, providing a consistent experience for all users.
-
-This project serves as a learning platform to explore best practices in authentication, user management, and responsive design while maintaining a focus on usability and security.
 
 ---
 
