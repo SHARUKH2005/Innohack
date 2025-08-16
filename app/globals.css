@@ -84,3 +84,15 @@
       @apply bg-background text-foreground;
     }
   }
+
+  @layer utilities {
+    /* Hide scrollbar but maintain functionality */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+  }

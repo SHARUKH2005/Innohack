@@ -1,237 +1,165 @@
-# Learnify - Learning Management System
+# Learnify
 
-A modern, scalable Learning Management System built with Next.js 14, featuring secure authentication, responsive design, and a comprehensive course management platform.
+![Next.js](https://img.shields.io/badge/Next.js-14.0.0-blue?style=flat-square&logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?style=flat-square&logo=typescript) ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.3.0-blue?style=flat-square&logo=tailwind-css) ![Clerk](https://img.shields.io/badge/Clerk-Authentication-blue?style=flat-square&logo=clerk) ![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green?style=flat-square&logo=node.js)
 
-## Architecture Overview
+A professional-grade Learning Management System (LMS) built with modern web technologies. Learnify is designed to provide a seamless and secure learning experience for users, featuring robust authentication, interactive course management, and comprehensive progress tracking.
 
-Learnify is built using a modern full-stack architecture leveraging the Next.js App Router for optimal performance and developer experience. The application implements server-side rendering (SSR) and static site generation (SSG) where appropriate, ensuring fast load times and excellent SEO performance.
+---
 
-### Core Technologies
+## Website Pages
 
-**Frontend Framework**
-- **Next.js 14** - React framework with App Router for file-based routing and server components
-- **React 18** - Component-based UI library with concurrent features
-- **TypeScript** - Static type checking for enhanced developer experience and code reliability
+### Landing Page
+<div align="center">
+  <img src="assets/images/img-landing.png" alt="Landing Page" width="600" />
+</div>
+<p>The main entry point to Learnify, showcasing its features and inviting users to sign up or log in.</p>
 
-**Styling & UI**
-- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
-- **shadcn/ui** - High-quality, accessible component library built on Radix UI primitives
-- **Radix UI** - Low-level UI primitives for building design systems
-- **Lucide React** - Beautiful, customizable SVG icons
-- **CSS Custom Properties** - Dynamic theming with light/dark mode support
+### Sign-Up Page
+<div align="center">
+  <img src="assets/images/img-sign-up.png" alt="Sign-Up Page" width="600" />
+</div>
+<p>Allows new users to create an account and start their learning journey.</p>
 
-**Authentication & Security**
-- **Clerk** - Complete authentication solution with advanced security features
-- **Middleware Protection** - Route-level authentication and authorization
-- **CSRF Protection** - Built-in cross-site request forgery protection
-- **Secure Headers** - Security headers configuration for production deployment
+### Dashboard
+<div align="center">
+  <img src="assets/images/img-dashboard.png" alt="Dashboard" width="600" />
+</div>
+<p>Provides an overview of the user's enrolled courses, progress, and quick access to resume learning.</p>
 
-**Development Tools**
-- **ESLint** - Code linting with Next.js optimized rules
-- **PostCSS** - CSS processing with Autoprefixer
-- **TypeScript Compiler** - Static type checking and compilation
+### Browse Courses
+<div align="center">
+  <img src="assets/images/img-browse-courses.png" alt="Browse Courses" width="600" />
+</div>
+<p>Displays a catalog of available courses, allowing users to explore and enroll in new learning opportunities.</p>
 
-## Authentication System
+### Community Page
+<div align="center">
+  <img src="assets/images/img-community.png" alt="Community Page" width="600" />
+</div>
+<p>Engage with other learners through discussions, Q&A, and resource sharing.</p>
 
-### Authentication Provider
-The application uses Clerk as the primary authentication provider, offering enterprise-grade security and user management capabilities.
+### Courses Page
+<div align="center">
+  <img src="assets/images/img-courses.png" alt="Courses Page" width="600" />
+</div>
+<p>Detailed information about individual courses, including curriculum and learning objectives.</p>
 
-### Supported Authentication Methods
+### Progress Page
+<div align="center">
+  <img src="assets/images/img-progress.png" alt="Progress Page" width="600" />
+</div>
+<p>Track your learning progress with visual indicators and detailed analytics.</p>
 
-**Email/Password Authentication**
-- Secure password-based authentication with industry-standard encryption
-- Password strength validation and requirements enforcement
-- Automated password breach detection and prevention
+---
 
-**Social Authentication**
-- Google OAuth 2.0 integration for seamless single sign-on
-- Automatic account linking for users with existing email addresses
-- Secure token management and refresh handling
+## Features
 
-**Email Verification**
-- Required email verification for all new user registrations
-- Automated verification email delivery with secure tokens
-- Configurable verification link expiration and security policies
+### Authentication
+- **Email/Password Login**: Secure credential-based sign-in.
+- **Google Authentication**: Easy login with Google accounts.
+- **Password Reset**: Secure password recovery via email.
+- **Session Management**: Track and manage active sessions across devices.
+- **Two-Factor Authentication (2FA)**: Enhanced account security.
 
-**Password Management**
-- Secure password reset functionality via email
-- Temporary password reset tokens with configurable expiration
-- Password history tracking to prevent reuse of recent passwords
+### Dashboard
+- **Course Overview**: View enrolled courses and progress.
+- **Progress Tracking**: Visual indicators for course completion.
+- **Quick Access**: Resume learning from where you left off.
 
-**Two-Factor Authentication (2FA)**
-- TOTP (Time-based One-Time Password) support
-- SMS-based verification options
-- Backup codes for account recovery
-- Configurable 2FA enforcement policies
+### Course Management
+- **Course Catalog**: Browse and filter available courses.
+- **Dynamic Course Pages**: Detailed course information and curriculum.
+- **Learning Paths**: Structured learning sequences.
 
-**Account Security Features**
-- Session management with configurable timeout policies
-- Device tracking and suspicious activity detection
-- Account lockout protection against brute force attacks
-- Comprehensive audit logging for security events
+### Community Features
+- **Discussion Forums**: Engage with other learners.
+- **Q&A**: Ask and answer questions.
+- **Resource Sharing**: Share learning materials.
 
-### Authentication Flow
+### Security
+- **Protected Routes**: Middleware ensures only authenticated users access sensitive pages.
+- **IP and Device Tracking**: Monitor login activity for suspicious behavior.
+- **Content Security Policies**: Prevent unauthorized access and attacks.
 
-1. **User Registration**
-   - User initiates registration with email/password or social provider
-   - Email verification email sent to provided address
-   - User clicks verification link to activate account
-   - Account creation completed with secure session establishment
+---
 
-2. **User Authentication**
-   - Credentials validated against secure authentication service
-   - Multi-factor authentication prompt if enabled
-   - Secure session token generation and storage
-   - Redirect to protected dashboard area
+## How It Works
 
-3. **Session Management**
-   - JWT-based session tokens with configurable expiration
-   - Automatic token refresh for seamless user experience
-   - Secure logout with complete session invalidation
+Learnify is a full-stack web application leveraging the following technologies:
+- **Next.js**: For server-side rendering and file-based routing.
+- **TypeScript**: Ensures type safety and better developer experience.
+- **Tailwind CSS**: Provides utility-first styling for rapid UI development.
+- **Clerk**: Handles authentication and user management.
+- **Node.js**: Backend runtime for server-side logic.
 
-## Project Structure
+---
 
-```
-├── app/                          # Next.js App Router directory
-│   ├── (auth)/                   # Authentication route group
-│   │   ├── layout.tsx           # Auth-specific layout component
-│   │   └── (routes)/            # Authentication routes
-│   │       ├── sign-in/         # Sign-in page with Clerk integration
-│   │       └── sign-up/         # Sign-up page with Clerk integration
-│   ├── (dashboard)/             # Protected dashboard route group
-│   │   ├── layout.tsx           # Dashboard layout with navigation
-│   │   └── (routes)/            # Dashboard routes
-│   │       └── page.tsx         # Main dashboard interface
-│   ├── globals.css              # Global styles and CSS custom properties
-│   └── layout.tsx               # Root layout with providers
-├── components/                   # Reusable UI components
-│   └── ui/                      # shadcn/ui component library
-├── lib/                         # Utility functions and configurations
-│   └── utils.ts                 # Tailwind class merging utilities
-├── middleware.ts                # Clerk authentication middleware
-└── public/                      # Static assets
-```
+## Setup Instructions
 
-## Security Implementation
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/jjacobsonn/lms-framework.git
+   cd lms-framework
+   ```
 
-### Route Protection
-The application implements comprehensive route protection using Clerk middleware:
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-```typescript
-// middleware.ts
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+3. **Configure Environment Variables**:
+   - Copy the example environment file:
+     ```bash
+     cp .env.example .env.local
+     ```
+   - Update `.env.local` with your Clerk API keys and other required configurations.
 
-const isProtectedRoute = createRouteMatcher(['/']);
+4. **Run the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:3000`.
 
-export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) {
-    auth().protect();
-  }
-});
-```
+---
 
-### Authentication State Management
-User authentication state is managed through Clerk's React context providers, ensuring consistent authentication status across the application.
+## Libraries and Tools Used
 
-### Data Protection
-- All sensitive data transmission occurs over HTTPS
-- Client-side data sanitization and validation
-- Server-side input validation and sanitization
-- Secure environment variable management
+- **Next.js**: Framework for React applications.
+- **TypeScript**: Static typing for JavaScript.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Clerk**: Authentication and user management.
+- **React**: Component-based UI library.
+- **PostCSS**: CSS processing.
 
-## Development Workflow
+---
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn package manager
-- Clerk account for authentication configuration
+## Disclaimer
 
-### Environment Configuration
-Create a `.env.local` file with the following variables:
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
-```
+This project is provided "as is" without any warranty. Use at your own risk. The authors are not responsible for any issues or damages arising from the use of this software.
 
-### Installation and Setup
-```bash
-# Install dependencies
-npm install
+---
 
-# Start development server
-npm run dev
+## Future Enhancements
 
-# Build for production
-npm run build
+- **Mobile Apps**: Native iOS and Android applications.
+- **Advanced Analytics**: Detailed learning insights.
+- **Content Creation Tools**: Enable instructors to create and manage courses.
+- **Certification**: Issue certificates upon course completion.
 
-# Start production server
-npm start
+---
 
-# Run linting
-npm run lint
-```
+## Why This Project Was Created
 
-### Development Server
-The application runs on `http://localhost:3000` in development mode with hot module replacement enabled.
+Learnify was developed as a hands-on project to deepen the understanding of building a modern, functional login system that is both frontend-friendly and mobile-responsive. The goal was to create a seamless user experience while integrating essential features such as:
 
-## Performance Optimization
+- **Email Notifications**: Automated email notifications for user registration and password resets, ensuring a smooth onboarding and account recovery process.
+- **Clerk Integration**: Leveraging Clerk for secure and scalable authentication, including social logins and session management.
+- **Mobile-Friendly Design**: Ensuring the application is fully responsive and accessible across devices, providing a consistent experience for all users.
 
-### Next.js Optimizations
-- Server-side rendering for improved initial page load
-- Automatic code splitting for optimal bundle sizes
-- Image optimization with Next.js Image component
-- Font optimization with automatic font loading
+This project serves as a learning platform to explore best practices in authentication, user management, and responsive design while maintaining a focus on usability and security.
 
-### Styling Performance
-- Tailwind CSS purging for minimal production CSS bundle
-- CSS custom properties for efficient theming
-- Component-level styling encapsulation
-
-### Authentication Performance
-- Efficient session management with automatic token refresh
-- Optimized authentication state hydration
-- Minimal authentication provider bundle size
-
-## Deployment Considerations
-
-### Production Configuration
-- Environment variable management for different deployment stages
-- Clerk authentication domain configuration
-- Security header configuration for production deployment
-- Error monitoring and logging setup
-
-### Hosting Platforms
-The application is optimized for deployment on:
-- Vercel (recommended for Next.js applications)
-- Netlify
-- AWS Amplify
-- Any Node.js hosting environment
-
-### Database Integration
-The current implementation focuses on authentication and UI components. Database integration can be added using:
-- Prisma ORM with PostgreSQL/MySQL
-- Supabase for full-stack development
-- MongoDB with Mongoose ODM
-- Firebase Firestore for real-time capabilities
-
-## Contributing
-
-### Code Standards
-- TypeScript strict mode enabled
-- ESLint configuration with Next.js best practices
-- Consistent component architecture using React functional components
-- Tailwind CSS utility classes for styling consistency
-
-### Authentication Testing
-- Test authentication flows in development environment
-- Verify email verification functionality
-- Test social authentication integrations
-- Validate session management and logout functionality
+---
 
 ## License
 
-This project is private and proprietary. All rights reserved.
+This project is licensed under the MIT License. See the LICENSE file for details.
