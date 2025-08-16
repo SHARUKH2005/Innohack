@@ -1,226 +1,165 @@
 # Learnify
 
-A modern learning management system built with Next.js 14, featuring secure authentication, interactive course management, and comprehensive progress tracking.
+![Next.js](https://img.shields.io/badge/Next.js-14.0.0-blue?style=flat-square&logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?style=flat-square&logo=typescript) ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.3.0-blue?style=flat-square&logo=tailwind-css) ![Clerk](https://img.shields.io/badge/Clerk-Authentication-blue?style=flat-square&logo=clerk) ![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green?style=flat-square&logo=node.js)
 
-## Technical Architecture
+A professional-grade Learning Management System (LMS) built with modern web technologies. Learnify is designed to provide a seamless and secure learning experience for users, featuring robust authentication, interactive course management, and comprehensive progress tracking.
 
-Learnify leverages a modern tech stack with an emphasis on performance, type safety, and component reusability:
+---
 
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript for type safety and developer experience
-- **Styling**: Tailwind CSS for utility-first styling
-- **Components**: shadcn/ui for accessible, customizable UI components
-- **Authentication**: Clerk for secure user authentication and profile management
-- **Rendering**: Server and Client Components for optimal performance
-- **Routing**: File-based routing with route groups and layouts
+## Website Pages
 
-## Core Features
+### Landing Page
+<div align="center">
+  <img src="assets/images/img-landing.png" alt="Landing Page" width="600" />
+</div>
+<p>The main entry point to Learnify, showcasing its features and inviting users to sign up or log in.</p>
 
-### Authentication System
+### Sign-Up Page
+<div align="center">
+  <img src="assets/images/img-sign-up.png" alt="Sign-Up Page" width="600" />
+</div>
+<p>Allows new users to create an account and start their learning journey.</p>
 
-Learnify implements a robust authentication system using Clerk, offering:
+### Dashboard
+<div align="center">
+  <img src="assets/images/img-dashboard.png" alt="Dashboard" width="600" />
+</div>
+<p>Provides an overview of the user's enrolled courses, progress, and quick access to resume learning.</p>
 
-- **Email/Password Authentication**: Secure credential-based sign-in
-- **Social Authentication**: Integration with third-party providers
-- **Protected Routes**: Route-level authentication via middleware
-- **User Profiles**: Comprehensive user profile management
-- **Session Management**: Secure session handling with device tracking
-- **Security Features**: Password strength enforcement, suspicious login detection
+### Browse Courses
+<div align="center">
+  <img src="assets/images/img-browse-courses.png" alt="Browse Courses" width="600" />
+</div>
+<p>Displays a catalog of available courses, allowing users to explore and enroll in new learning opportunities.</p>
 
-```typescript
-// Auth protection implementation in middleware.ts
-export default withClerkMiddleware((req) => {
-  const { pathname } = req.nextUrl;
-  const isPublicPath = publicPaths.find(path => 
-    pathname.startsWith(path) || pathname.includes('/api/'));
-    
-  if (!isPublicPath && !req.auth.userId) {
-    const signInUrl = new URL('/sign-in', req.url);
-    return NextResponse.redirect(signInUrl);
-  }
-});
-```
+### Community Page
+<div align="center">
+  <img src="assets/images/img-community.png" alt="Community Page" width="600" />
+</div>
+<p>Engage with other learners through discussions, Q&A, and resource sharing.</p>
 
-### User Profile Management
+### Courses Page
+<div align="center">
+  <img src="assets/images/img-courses.png" alt="Courses Page" width="600" />
+</div>
+<p>Detailed information about individual courses, including curriculum and learning objectives.</p>
 
-The profile section provides comprehensive account management capabilities:
+### Progress Page
+<div align="center">
+  <img src="assets/images/img-progress.png" alt="Progress Page" width="600" />
+</div>
+<p>Track your learning progress with visual indicators and detailed analytics.</p>
 
-- **Account Information**: Edit personal information and preferences
-- **Security Management**: Password changes and 2FA configuration
-- **Session Tracking**: View and manage active sessions across devices
-- **Location Detection**: Geographic location tracking of login attempts
-- **Device Information**: Browser and OS details for connected devices
-- **IP Address Monitoring**: Tracking of IP addresses with geographic data
-- **Session Timestamps**: Precise login time tracking for all sessions
+---
 
-Security implementation secures user accounts with:
-```
-Account
-Manage your account info.
+## Features
 
-Secured by Clerk
+### Authentication
+- **Email/Password Login**: Secure credential-based sign-in.
+- **Google Authentication**: Easy login with Google accounts.
+- **Password Reset**: Secure password recovery via email.
+- **Session Management**: Track and manage active sessions across devices.
+- **Two-Factor Authentication (2FA)**: Enhanced account security.
 
-Security
-••••••••••  // Masked password
-
-MacBook Pro  // Example device
-
-This device
-Firefox 123.0.0.0  // Example browser information
-
-192.168.1.1 (New York, US)  // Example IP with geolocation
-
-Today at 09:45 AM  // Example session timestamp
-
-Active devices  // List of logged-in sessions across devices
-```
-
-### Learning Dashboard
-
-The dashboard provides an intuitive interface for students to:
-
-- **Course Overview**: See enrolled courses with progress indicators
-- **Progress Tracking**: Visual representation of course completion status
-- **Learning Statistics**: Track time spent, courses completed, and overall progress
-- **Quick Access**: Continue learning from where you left off
-- **Course Discovery**: Find new courses based on interests and learning goals
+### Dashboard
+- **Course Overview**: View enrolled courses and progress.
+- **Progress Tracking**: Visual indicators for course completion.
+- **Quick Access**: Resume learning from where you left off.
 
 ### Course Management
-
-Comprehensive course management features:
-
-- **Course Catalog**: Browse available courses with filtering and search
-- **Course Details**: In-depth course information with curriculum breakdown
-- **Progress Tracking**: Visual progress bars and completion indicators
-- **Learning Paths**: Structured learning sequences with prerequisites
-- **Bookmarking**: Save courses for later access
-
-```tsx
-// CourseCard component with interactive bookmark functionality
-export function CourseCard({ 
-  id, title, description, progress, hoursLeft, gradient 
-}: CourseCardProps) {
-  const [bookmarked, setBookmarked] = useState(false);
-  
-  const toggleBookmark = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setBookmarked(!bookmarked);
-  };
-  
-  return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      {/* Course content rendering */}
-      <div className="flex space-x-3">
-        <Button className="flex-1">
-          {progress > 0 ? "Continue Learning" : "Start Learning"}
-        </Button>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={toggleBookmark}
-        >
-          {bookmarked ? <BookmarkCheck /> : <Bookmark />}
-        </Button>
-      </div>
-    </div>
-  );
-}
-```
+- **Course Catalog**: Browse and filter available courses.
+- **Dynamic Course Pages**: Detailed course information and curriculum.
+- **Learning Paths**: Structured learning sequences.
 
 ### Community Features
+- **Discussion Forums**: Engage with other learners.
+- **Q&A**: Ask and answer questions.
+- **Resource Sharing**: Share learning materials.
 
-Interactive community engagement tools:
+### Security
+- **Protected Routes**: Middleware ensures only authenticated users access sensitive pages.
+- **IP and Device Tracking**: Monitor login activity for suspicious behavior.
+- **Content Security Policies**: Prevent unauthorized access and attacks.
 
-- **Discussion Forums**: Course-specific and general discussion areas
-- **Member Directory**: Connect with fellow learners
-- **Content Sharing**: Share resources and learning materials
-- **Q&A Functionality**: Ask questions and provide answers
+---
 
-## Routing Structure
+## How It Works
 
-```
-├── app/                       
-│   ├── (auth)/                # Authentication route group
-│   │   ├── layout.tsx         # Auth layout
-│   │   └── (routes)/          
-│   │       ├── sign-in/       # Sign-in flow
-│   │       └── sign-up/       # Registration flow
-│   ├── (dashboard)/           # Protected dashboard routes
-│   │   ├── layout.tsx         # Dashboard layout with navigation
-│   │   └── (routes)/          
-│   │       ├── page.tsx       # Main dashboard
-│   │       ├── courses/       # Course management
-│   │       │   └── [courseId] # Dynamic course detail pages
-│   │       ├── browse/        # Course discovery
-│   │       ├── progress/      # Learning progress tracking
-│   │       └── community/     # Community features
-```
+Learnify is a full-stack web application leveraging the following technologies:
+- **Next.js**: For server-side rendering and file-based routing.
+- **TypeScript**: Ensures type safety and better developer experience.
+- **Tailwind CSS**: Provides utility-first styling for rapid UI development.
+- **Clerk**: Handles authentication and user management.
+- **Node.js**: Backend runtime for server-side logic.
 
-## Navigation System
+---
 
-The application implements a shared navbar component that provides consistent navigation across all authenticated routes:
+## Setup Instructions
 
-```tsx
-// Navbar component with active route highlighting
-export function Navbar({ title = "Learnify" }: NavbarProps) {
-  const pathname = usePathname();
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/jjacobsonn/lms-framework.git
+   cd lms-framework
+   ```
 
-  const routes = [
-    { href: "/", label: "Dashboard", active: pathname === "/" },
-    { href: "/courses", label: "My Courses", active: pathname === "/courses" },
-    { href: "/browse", label: "Browse", active: pathname === "/browse" },
-    { href: "/progress", label: "Progress", active: pathname === "/progress" },
-    { href: "/community", label: "Community", active: pathname === "/community" }
-  ];
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-  return (
-    <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-      {/* Navigation implementation */}
-    </header>
-  );
-}
-```
+3. **Configure Environment Variables**:
+   - Copy the example environment file:
+     ```bash
+     cp .env.example .env.local
+     ```
+   - Update `.env.local` with your Clerk API keys and other required configurations.
 
-## Development Setup
+4. **Run the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:3000`.
 
-```bash
-# Clone repository
-git clone https://github.com/jjacobsonn/lms-framework.git
+---
 
-# Install dependencies
-npm install
+## Libraries and Tools Used
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Clerk API keys
+- **Next.js**: Framework for React applications.
+- **TypeScript**: Static typing for JavaScript.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Clerk**: Authentication and user management.
+- **React**: Component-based UI library.
+- **PostCSS**: CSS processing.
 
-# Start development server
-npm run dev
-```
+---
 
-## Performance Optimization
+## Disclaimer
 
-- **Component Chunking**: Automatic code splitting for optimized loading
-- **Image Optimization**: Next.js Image component for optimal asset delivery
-- **Selective Hydration**: Prioritized interactivity for critical UI elements
-- **Edge Middleware**: Efficient authentication checks at the network edge
-- **Shared Components**: Reusable UI elements to reduce bundle size
-- **Responsive Design**: Mobile-first approach for all viewport sizes
+This project is provided "as is" without any warranty. Use at your own risk. The authors are not responsible for any issues or damages arising from the use of this software.
 
-## Security Implementation
-
-- **Protected Routes**: Authentication middleware for route protection
-- **Clerk Integration**: Enterprise-grade authentication provider
-- **Session Management**: Secure session handling with device tracking
-- **Input Validation**: Client and server-side validation to prevent attacks
-- **Content Security**: Proper content security policies for asset loading
-- **Password Security**: Strong password requirements and breach detection
+---
 
 ## Future Enhancements
 
-- **Advanced Analytics**: Detailed learning analytics and recommendations
-- **Content Creation Tools**: Course authoring and publishing capabilities
-- **Assessment System**: Quiz and assignment functionality
-- **Certification**: Course completion certification and verification
-- **API Integration**: LTI support for integration with other learning tools
-- **Mobile Applications**: Native mobile apps for iOS and Android
+- **Mobile Apps**: Native iOS and Android applications.
+- **Advanced Analytics**: Detailed learning insights.
+- **Content Creation Tools**: Enable instructors to create and manage courses.
+- **Certification**: Issue certificates upon course completion.
+
+---
+
+## Why This Project Was Created
+
+Learnify was developed as a hands-on project to deepen the understanding of building a modern, functional login system that is both frontend-friendly and mobile-responsive. The goal was to create a seamless user experience while integrating essential features such as:
+
+- **Email Notifications**: Automated email notifications for user registration and password resets, ensuring a smooth onboarding and account recovery process.
+- **Clerk Integration**: Leveraging Clerk for secure and scalable authentication, including social logins and session management.
+- **Mobile-Friendly Design**: Ensuring the application is fully responsive and accessible across devices, providing a consistent experience for all users.
+
+This project serves as a learning platform to explore best practices in authentication, user management, and responsive design while maintaining a focus on usability and security.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
