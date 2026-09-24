@@ -1,3 +1,9 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Core Next.js settings
@@ -39,17 +45,21 @@ const nextConfig = {
   
   // Disable certain checks during build to avoid errors
   eslint: {
-    // Warning: This allows production builds to successfully complete even with ESLint errors
     ignoreDuringBuilds: true,
   },
   
   typescript: {
-    // Similarly this skips type checking to allow builds with TypeScript errors
     ignoreBuildErrors: true,
   },
   
-  // Reduce build size by excluding certain patterns
   poweredByHeader: false,
+
+  // --- LOCAL DEV: Mock @clerk/nextjs so app runs without API keys ---
+  webpack: (config) => {
+    config.resolve.alias['@clerk/nextjs'] = path.resolve(__dirname, './lib/clerk-mock.tsx');
+    config.resolve.alias['@clerk/nextjs/server'] = path.resolve(__dirname, './lib/clerk-mock-server.ts');
+    return config;
+  },
 };
 
 export default nextConfig;

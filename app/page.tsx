@@ -38,7 +38,7 @@ export default function LandingPage() {
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="url(#leftPageGradient)" />
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="url(#rightPageGradient)" />
             </svg>
-            <h1 className="text-2xl font-bold">Learnify</h1>
+            <h1 className="text-2xl font-bold">BlockLearnX</h1>
           </div>
           <div className="hidden md:flex items-center space-x-2">
             <Button variant="ghost" asChild>
@@ -57,7 +57,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-10 items-center">
             <div className="space-y-6">
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                Elevate Your Learning Journey with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-blue-500 to-emerald-500">Learnify</span>
+                Elevate Your Learning Journey with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-blue-500 to-emerald-500">BlockLearnX</span>
               </h2>
               <p className="text-xl text-muted-foreground">
                 The all-in-one learning management platform designed to help you master new skills, track your progress, and achieve your educational goals.
@@ -121,7 +121,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Everything You Need to Succeed</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Learnify provides all the tools and resources you need to take your learning experience to the next level.
+              BlockLearnX provides all the tools and resources you need to take your learning experience to the next level.
             </p>
           </div>
 
@@ -164,7 +164,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Start Your Learning Journey?</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-            Join thousands of learners who have already transformed their skills and careers with Learnify.
+            Join thousands of learners who have already transformed their skills and careers with BlockLearnX.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600">
@@ -200,10 +200,10 @@ export default function LandingPage() {
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" fill="url(#footerLeftPageGradient)" />
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="url(#footerRightPageGradient)" />
               </svg>
-              <span className="text-lg font-bold">Learnify</span>
+              <span className="text-lg font-bold">BlockLearnX</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              © 2025 Learnify. All rights reserved.
+              © 2025 BlockLearnX. All rights reserved.
             </div>
           </div>
         </div>
