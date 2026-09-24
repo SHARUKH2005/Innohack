@@ -1,6 +1,6 @@
 "use client";
 
-import { Navbar } from "@/components/shared/navbar";
+import { GlobalNavbar } from "@/components/shared/global-navbar";
 
 export default function DashboardLayout({
   children,
@@ -9,7 +9,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <GlobalNavbar />
       {children}
     </div>
   )
