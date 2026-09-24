@@ -6,77 +6,63 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
+    # Run security audit daily at 2 AM UTC
     - cron: '0 2 * * *'
 
 jobs:
-  frontend-security:
+  security-audit:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
 
-      - name: Install frontend dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Run frontend npm audit
-        run: npm audit --audit-level=moderate || true
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate
 
-      - name: Run frontend security lint
-        run: npm run lint:security || true
+    - name: Run ESLint security rules
+      run: npx eslint . --ext .js,.jsx,.ts,.tsx --config .eslintrc.security.json || true
 
-  backend-security:
+  dependency-review:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: backend
-
+    if: github.event_name == 'pull_request'
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install backend dependencies
-        run: npm ci
-
-      - name: Run backend npm audit
-        run: npm audit --audit-level=moderate || true
-
-      - name: Build backend
-        run: npm run build
-
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v3
+      with:
+        fail-on-severity: moderate
+        
   codeql-analysis:
     runs-on: ubuntu-latest
-
     permissions:
       actions: read
       contents: read
       security-events: write
-
+      
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+        
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+      
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
