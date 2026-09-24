@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const apiKey = process.env.GEMINI_API_KEY || "";
-console.log("Gemini API Key loaded:", apiKey ? `${apiKey.slice(0, 8)}...` : "MISSING");
 
 // New @google/genai SDK — supports AQ. key format from Google AI Studio
 const ai = new GoogleGenAI({ apiKey });
