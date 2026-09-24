@@ -127,7 +127,7 @@ export default function ProgressPage() {
   const [timePeriod, setTimePeriod] = useState<"weekly" | "monthly" | "allTime">("monthly")
   const [selectedEvent, setSelectedEvent] = useState<LearningEvent | null>(null)
   const [isMounted, setIsMounted] = useState(false)
-  const [currentMonth, setCurrentMonth] = useState("Aug")
+  const [currentMonth, setCurrentMonth] = useState<string>("Aug")
   const [currentWeek, setCurrentWeek] = useState<"week1" | "week2" | "week3" | "week4">("week3")
   const [isAchievementsModalOpen, setIsAchievementsModalOpen] = useState(false)
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
@@ -403,7 +403,7 @@ export default function ProgressPage() {
   };
   
   // Current weekly events based on selected month and week
-  const weeklyEvents = weeklyEventsByMonth[currentMonth]?.[currentWeek] || weeklyEventsByMonth["Aug"]["week3"];
+  const weeklyEvents = (weeklyEventsByMonth as Record<string, Record<string, typeof weeklyEventsByMonth["Aug"]["week3"]>>)[currentMonth]?.[currentWeek] || weeklyEventsByMonth["Aug"]["week3"];
   
   // Earlier August events
   const earlyAugustEvents = [
@@ -461,7 +461,7 @@ export default function ProgressPage() {
   // Combine events for different views
   const learningEvents = {
     weekly: weeklyEvents,
-    monthly: eventsByMonth[currentMonth] || [...earlyAugustEvents, ...weeklyEvents, ...futureEvents],
+    monthly: (eventsByMonth as Record<string, typeof juneEvents>)[currentMonth] || [...earlyAugustEvents, ...weeklyEvents, ...futureEvents],
     allTime: [...juneEvents, ...julyEvents, ...earlyAugustEvents, ...weeklyEvents, ...futureEvents, ...septemberEvents]
   }
   
@@ -650,10 +650,10 @@ export default function ProgressPage() {
                     
                     if (currentWeekIndex > 0) {
                       // Go to previous week in same month
-                      setCurrentWeek(weeks[currentWeekIndex - 1]);
-                    } else if (currentMonthIndex > 0 && weeklyEventsByMonth[months[currentMonthIndex - 1]]) {
+                      setCurrentWeek(weeks[currentWeekIndex - 1] as "week1" | "week2" | "week3" | "week4");
+                    } else if (currentMonthIndex > 0 && (weeklyEventsByMonth as Record<string, unknown>)[months[currentMonthIndex - 1]]) {
                       // Go to last week of previous month
-                      setCurrentMonth(months[currentMonthIndex - 1]);
+                      setCurrentMonth(months[currentMonthIndex - 1] as "Jun" | "Jul" | "Aug" | "Sep");
                       setCurrentWeek("week4");
                     }
                   }}
@@ -686,10 +686,10 @@ export default function ProgressPage() {
                     
                     if (currentWeekIndex < 3) {
                       // Go to next week in same month
-                      setCurrentWeek(weeks[currentWeekIndex + 1]);
-                    } else if (currentMonthIndex < months.length - 1 && weeklyEventsByMonth[months[currentMonthIndex + 1]]) {
+                      setCurrentWeek(weeks[currentWeekIndex + 1] as "week1" | "week2" | "week3" | "week4");
+                    } else if (currentMonthIndex < months.length - 1 && (weeklyEventsByMonth as Record<string, unknown>)[months[currentMonthIndex + 1]]) {
                       // Go to first week of next month
-                      setCurrentMonth(months[currentMonthIndex + 1]);
+                      setCurrentMonth(months[currentMonthIndex + 1] as "Jun" | "Jul" | "Aug" | "Sep");
                       setCurrentWeek("week1");
                     }
                   }}
@@ -713,7 +713,7 @@ export default function ProgressPage() {
               {/* Weekly timeline view */}
               {weeklyEvents && weeklyEvents.length > 0 ? (
                 <div className="space-y-3">
-                  {weeklyEvents.map((event, index) => (
+                  {weeklyEvents.map((event: {day: number; month: string; title: string; hours: number; lessons: number; notes: string; category: string; planned?: boolean}, index: number) => (
                     <div 
                       key={index}
                       onClick={() => setSelectedEvent(event)}
@@ -824,13 +824,13 @@ export default function ProgressPage() {
                   {/* Calculate month layout */}
                 {(() => {
                   // Helper function to get the first day of month (0 = Sunday, 1 = Monday, etc.)
-                  const getFirstDayOfMonth = (month, year) => {
+                  const getFirstDayOfMonth = (month: string, year: number) => {
                     const monthIndex = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(month);
                     return new Date(year, monthIndex, 1).getDay();
                   };
                   
                   // Helper function to get number of days in month
-                  const getDaysInMonth = (month, year) => {
+                  const getDaysInMonth = (month: string, year: number) => {
                     const monthIndex = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(month);
                     return new Date(year, monthIndex + 1, 0).getDate();
                   };
@@ -858,7 +858,7 @@ export default function ProgressPage() {
                     // Find events for this day
                     const dayEvents = learningEvents.monthly.filter(event => event.day === day && event.month === currentMonth);
                     const hasEvents = dayEvents.length > 0;
-                    const isPlannedDay = dayEvents.some(event => event.planned);
+                    const isPlannedDay = dayEvents.some((event: any) => event.planned);
                     
                     return (
                       <div 
@@ -871,7 +871,7 @@ export default function ProgressPage() {
                         
                         {/* Events for the day */}
                         <div className="flex-grow overflow-hidden">
-                          {hasEvents && dayEvents.map((event, i) => (
+                          {hasEvents && dayEvents.map((event: any, i) => (
                             <div 
                               key={i}
                               onClick={() => setSelectedEvent(event)}
@@ -898,7 +898,7 @@ export default function ProgressPage() {
               </div>
               
               {/* No data message */}
-              {(!eventsByMonth[currentMonth] || eventsByMonth[currentMonth].length === 0) && (
+              {(!(eventsByMonth as Record<string, any[]>)[currentMonth] || (eventsByMonth as Record<string, any[]>)[currentMonth].length === 0) && (
                 <div className="mt-8 flex flex-col items-center justify-center py-10 px-4">
                   <div className="p-4 bg-muted/50 rounded-full mb-4">
                     <Calendar className="h-10 w-10 text-muted-foreground" />
@@ -915,7 +915,7 @@ export default function ProgressPage() {
               )}
               
               {/* Only show legend if there's data */}
-              {eventsByMonth[currentMonth] && eventsByMonth[currentMonth].length > 0 && (
+              {(eventsByMonth as Record<string, any[]>)[currentMonth] && (eventsByMonth as Record<string, any[]>)[currentMonth].length > 0 && (
                 <div className="mt-4 flex flex-col items-center">
                   <div className="text-xs text-muted-foreground grid grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-1">
                     <div className="flex items-center">
