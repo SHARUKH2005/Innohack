@@ -1,0 +1,19 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "rpcUrl": "https://eth-sepolia.g.alchemy.com",
+  "contracts": {
+    "MXToken": {
+      "address": "0xca8FD73E4EB46F7730f000baAa46Dd8A5223d3e3"
+    },
+    "AvatarNFT": {
+      "address": "0xef26C1650a19b74e837917d683a1C17C41e8863b"
+    },
+    "CertificateNFT": {
+      "address": "0x139fACe7302AB8bB7d948AB1bB8D4BB6e0034924"
+    },
+    "NFTMarketplace": {
+      "address": "0x3FDbba1a31056555FD042F64df08074B9dc6F1b2"
+    }
+  }
+}

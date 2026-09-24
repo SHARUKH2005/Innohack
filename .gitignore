@@ -30,7 +30,6 @@ out/
 # Production builds
 /build
 /dist
-dist/
 *.tgz
 
 # Runtime data
