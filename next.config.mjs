@@ -54,6 +54,15 @@ const nextConfig = {
   
   poweredByHeader: false,
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
+
   // --- LOCAL DEV: Mock @clerk/nextjs so app runs without API keys ---
   webpack: (config) => {
     config.resolve.alias['@clerk/nextjs'] = path.resolve(__dirname, './lib/clerk-mock.tsx');

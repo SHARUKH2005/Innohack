@@ -303,7 +303,7 @@ export default function BrowsePage() {
                     totalHours={course.totalHours}
                     rating={course.rating}
                     price={course.price}
-                    discountedPrice={course.price > 0 ? undefined : 0} // temp logic for discount
+                    discountedPrice={course.price > 0 ? null : 0} // temp logic for discount
                     gradient={course.gradient}
                     featured={course.featured}
                     skillLevel={course.difficulty.toLowerCase()}
