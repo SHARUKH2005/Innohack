@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!existingProfile.role) {
           setIsNewUser(true);
-          setShowRoleModal(true);
+          setShowRoleModal(false);
         }
         return;
       }
@@ -153,13 +153,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar_url: avatarUrl,
       created_at: authUser.created_at || now,
       last_login_at: now,
-      role: null, // Needs onboarding role selection
+      role: "Learner",
     };
 
     setProfile(newProfile);
     localStorage.setItem("blocklearnx_user_profile", JSON.stringify(newProfile));
     setIsNewUser(true);
-    setShowRoleModal(true);
+    setShowRoleModal(false);
 
     // Save to Supabase DB if enabled
     try {

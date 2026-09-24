@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/supabase/auth-context";
-import { RoleOnboardingModal } from "@/components/auth/role-onboarding-modal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,7 +39,6 @@ export default function RootLayout({
       <body className={`${inter.className} h-full`}>
         <AuthProvider>
           {children}
-          <RoleOnboardingModal />
         </AuthProvider>
       </body>
     </html>

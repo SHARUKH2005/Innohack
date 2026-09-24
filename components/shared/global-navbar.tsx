@@ -9,6 +9,7 @@ import {
   Zap, Play, Trophy, Home, ShieldAlert, Cpu, Layers, LogOut, User,
 } from "lucide-react";
 import { useAuth } from "@/lib/supabase/auth-context";
+import { Logo } from "@/components/shared/logo";
 
 interface NavCategory {
   label: string;
@@ -114,17 +115,12 @@ export function GlobalNavbar() {
     : user?.email?.slice(0, 2).toUpperCase() || "BX";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-2xs">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <BookOpen className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-              BlockLearnX
-            </span>
+          <Link href="/" className="flex items-center shrink-0 py-2">
+            <Logo height={64} />
           </Link>
 
           {/* Desktop Nav */}
@@ -293,15 +289,9 @@ export function GlobalNavbar() {
               <div className="hidden sm:flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-all"
+                  className="text-xs font-bold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm"
                 >
                   Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm"
-                >
-                  Get Started
                 </Link>
               </div>
             )}
@@ -365,11 +355,8 @@ export function GlobalNavbar() {
           ))}
           {!(user || profile) && (
             <div className="p-3 border-t border-border flex flex-col gap-2">
-              <Link href="/login" className="w-full text-center text-sm font-semibold py-2 rounded-lg border border-border hover:bg-accent transition-all">
+              <Link href="/login" className="w-full text-center text-sm font-bold py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
                 Login
-              </Link>
-              <Link href="/register" className="w-full text-center text-sm font-semibold py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
-                Get Started
               </Link>
             </div>
           )}

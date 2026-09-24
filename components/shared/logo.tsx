@@ -1,47 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
 
 interface LogoProps {
   className?: string;
   height?: number;
   width?: number;
-  showTagline?: boolean;
   variant?: "light" | "dark" | "auto";
 }
 
 export function Logo({
   className = "",
-  height = 40,
+  height = 62,
+  variant = "auto",
 }: LogoProps) {
+  const invertClass = variant === "dark" 
+    ? "invert brightness-200 contrast-200" 
+    : variant === "light" 
+    ? "" 
+    : "dark:invert";
+
   return (
-    <div className={`relative flex items-center shrink-0 gap-2.5 ${className}`}>
-      <div 
-        className="rounded-xl bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 transition-transform group-hover:scale-105"
-        style={{ width: `${height}px`, height: `${height}px` }}
-      >
-        <BookOpen className="h-5 w-5 text-white" />
-      </div>
-      <div className="flex flex-col">
-        <span className="text-xl font-extrabold bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
-          BlockLearnX
-        </span>
-      </div>
+    <div className={`relative flex items-center shrink-0 ${className}`}>
+      <img
+        src="/logo.png"
+        alt="BlockLearnX - LEARN • BUILD • BEYOND"
+        style={{ height: `${height}px`, width: "auto" }}
+        className={`object-contain transition-all duration-200 select-none ${invertClass}`}
+      />
     </div>
   );
 }
 
 export function BrandLogoLink({
-  height = 40,
+  height = 62,
   className = "",
+  variant = "auto",
 }: {
   height?: number;
   className?: string;
+  variant?: "light" | "dark" | "auto";
 }) {
   return (
-    <Link href="/" className={`inline-flex items-center gap-2 group ${className}`}>
-      <Logo height={height} />
+    <Link href="/" className={`inline-flex items-center group ${className}`}>
+      <Logo height={height} variant={variant} />
     </Link>
   );
 }

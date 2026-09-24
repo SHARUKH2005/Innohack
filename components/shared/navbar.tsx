@@ -73,12 +73,12 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
-      <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-2xs">
+      <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between gap-4">
 
         {/* ── LEFT: Logo ── */}
-        <Link href="/" className="shrink-0 flex items-center">
-          <Logo height={40} width={180} />
+        <Link href="/" className="shrink-0 flex items-center py-2">
+          <Logo height={64} />
         </Link>
 
         {/* ── CENTER: Nav Links (desktop) ── */}
@@ -227,11 +227,8 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
             </div>
           ) : (
             <div className="hidden sm:flex items-center gap-2">
-              <Button asChild variant="outline" className="h-8 text-xs font-semibold border-slate-300 px-4">
+              <Button asChild className="h-9 text-xs font-bold bg-[#0056D2] hover:bg-[#00419e] text-white px-5 shadow-xs">
                 <Link href="/login">Login</Link>
-              </Button>
-              <Button asChild className="h-8 text-xs font-semibold bg-[#0056D2] hover:bg-[#00419e] text-white px-4">
-                <Link href="/register">Get Started</Link>
               </Button>
             </div>
           )}
@@ -277,11 +274,8 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
           {/* Auth buttons on mobile */}
           {!(user || profile) && (
             <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-              <Button asChild variant="outline" className="w-full text-sm font-semibold">
+              <Button asChild className="w-full bg-[#0056D2] text-white text-sm font-bold">
                 <Link href="/login" onClick={() => setMobileOpen(false)}>Login</Link>
-              </Button>
-              <Button asChild className="w-full bg-[#0056D2] text-white text-sm font-semibold">
-                <Link href="/register" onClick={() => setMobileOpen(false)}>Get Started</Link>
               </Button>
             </div>
           )}
