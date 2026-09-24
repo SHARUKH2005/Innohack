@@ -32,6 +32,11 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
       active: pathname === "/progress",
     },
     {
+      href: "/collection",
+      label: "NFT Collection",
+      active: pathname === "/collection",
+    },
+    {
       href: "/community",
       label: "Community",
       active: pathname === "/community",
