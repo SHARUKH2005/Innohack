@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🎓 BlockLearnX
 
@@ -17,10 +17,6 @@
 
 > **BlockLearnX** is a premium, full-stack Learning Management System engineered for the future of education.  
 > Built on a modern web stack with enterprise-grade security, real-time progress tracking, and a vibrant community — all in one platform.
-
-<br/>
-
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20BlockLearnX-6C47FF?style=for-the-badge)](https://learnify-new-1.vercel.app/dashboard)
 
 </div>
 
@@ -267,11 +263,6 @@ BlockLearnX is deployed on **Vercel** — the platform built for Next.js.
 - ✅ **Global CDN** — Assets served from the edge for blazing-fast load times
 - ✅ **Preview Deployments** — Every PR gets its own preview URL for testing
 
-### Live Application
-
-| Environment | URL |
-|-------------|-----|
-| 🟢 Production | [https://learnify-new-1.vercel.app/dashboard](https://learnify-new-1.vercel.app/dashboard) |
 
 ---
 
