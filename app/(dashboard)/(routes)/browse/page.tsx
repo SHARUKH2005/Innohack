@@ -5,9 +5,10 @@ import { Search, Filter, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryCard } from "@/components/shared/category-card";
 import { BrowseCourseCard } from "@/components/shared/browse-course-card";
-import { categories, courses, FilterOptions, filterAndPaginateCourses } from "@/lib/data";
+import { categories as staticCategories, FilterOptions, filterAndPaginateCourses } from "@/lib/data";
 import { useFavorites } from "@/lib/hooks/use-favorites";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { getCategories, getCourses } from "@/lib/actions/courses";
 
 export default function BrowsePage() {
   // State for filters
@@ -27,32 +28,66 @@ export default function BrowsePage() {
   const ITEMS_PER_PAGE = 6;
   
   // Get courses based on filters
-  const [filteredCourses, setFilteredCourses] = useState<typeof courses>([]);
+  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
+  const [dbCategories, setDbCategories] = useState<any[]>(staticCategories);
+  const [loading, setLoading] = useState(true);
   
   // Use favorites hook
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
+
+  // Load categories
+  useEffect(() => {
+    async function loadCats() {
+      const cats = await getCategories();
+      if (cats && cats.length > 0) {
+        // preserve the icon and gradient from static since DB might not have the right UI yet
+        // or just use DB as is
+        setDbCategories(cats);
+      }
+    }
+    loadCats();
+  }, []);
   
   // Apply filters
   useEffect(() => {
-    const result = filterAndPaginateCourses({
-      category: selectedCategory,
-      skillLevel,
-      duration,
-      sortBy,
-      searchQuery: debouncedSearchQuery,
-      page: currentPage,
-      itemsPerPage: ITEMS_PER_PAGE
-    });
-    
-    setFilteredCourses(result.courses);
-    setTotalPages(result.pagination.totalPages);
-    setTotalResults(result.pagination.totalItems);
-    
-    // Reset to page 1 when filters change
-    if (currentPage !== 1 && result.pagination.totalPages < currentPage) {
-      setCurrentPage(1);
+    async function fetchCourses() {
+      setLoading(true);
+      // Wait for debounce
+      
+      const categoryObj = dbCategories.find(c => c.slug === selectedCategory);
+      const categoryId = categoryObj?.id;
+      
+      const realCourses = await getCourses({
+        title: debouncedSearchQuery,
+        categoryId: categoryId,
+      });
+
+      // Simple client side filter for skill and duration for now
+      let results = realCourses;
+      
+      if (skillLevel) {
+        results = results.filter((c: any) => c.difficulty.toLowerCase() === skillLevel.toLowerCase());
+      }
+      
+      // Pagination
+      const total = results.length;
+      const pages = Math.ceil(total / ITEMS_PER_PAGE);
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const paginated = results.slice(start, start + ITEMS_PER_PAGE);
+      
+      setFilteredCourses(paginated);
+      setTotalPages(pages || 1);
+      setTotalResults(total);
+      setLoading(false);
+      
+      // Reset to page 1 when filters change and out of bounds
+      if (currentPage !== 1 && pages < currentPage && pages > 0) {
+        setCurrentPage(1);
+      }
     }
-  }, [selectedCategory, skillLevel, duration, sortBy, debouncedSearchQuery, currentPage]);
+    
+    fetchCourses();
+  }, [selectedCategory, skillLevel, duration, sortBy, debouncedSearchQuery, currentPage, dbCategories]);
   
   // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
@@ -139,7 +174,7 @@ export default function BrowsePage() {
                 }}
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
+                {dbCategories.map((cat) => (
                   <option key={cat.slug} value={cat.slug}>{cat.name}</option>
                 ))}
               </select>
@@ -212,11 +247,11 @@ export default function BrowsePage() {
             
             <div className="overflow-x-auto py-2 pb-4 hide-scrollbar">
               <div className="flex gap-3 min-w-min pl-8 pr-10">
-                {categories.map((category) => (
+                {dbCategories.map((category) => (
                   <div key={category.slug} className="w-[130px] flex-shrink-0">
                     <CategoryCard
                       name={category.name}
-                      count={category.count}
+                      count={category._count?.courses || 0}
                       gradient={category.gradient}
                       icon={category.icon}
                       isSelected={selectedCategory === category.slug}
@@ -236,9 +271,9 @@ export default function BrowsePage() {
             <div className="flex items-center justify-between mt-4">
               <h2 className="text-xl font-semibold">
                 {debouncedSearchQuery
-                  ? `Search Results${selectedCategory ? ` in ${categories.find(c => c.slug === selectedCategory)?.name}` : ''}`
+                  ? `Search Results${selectedCategory ? ` in ${dbCategories.find(c => c.slug === selectedCategory)?.name}` : ''}`
                   : selectedCategory
-                    ? `${categories.find(c => c.slug === selectedCategory)?.name || 'Selected'} Courses`
+                    ? `${dbCategories.find(c => c.slug === selectedCategory)?.name || 'Selected'} Courses`
                     : 'Featured Courses'
                 }
               </h2>
@@ -255,7 +290,7 @@ export default function BrowsePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCourses.map((course) => {
                 // Find the category object for this course
-                const categoryObj = categories.find(cat => cat.slug === course.category);
+                const categoryObj = course.category;
                 
                 return (
                   <BrowseCourseCard
@@ -263,15 +298,15 @@ export default function BrowsePage() {
                     id={course.id}
                     title={course.title}
                     description={course.description}
-                    category={course.category}
+                    category={categoryObj?.slug || course.categoryId}
                     categoryLabel={categoryObj?.name || ''}
                     totalHours={course.totalHours}
                     rating={course.rating}
                     price={course.price}
-                    discountedPrice={course.discountedPrice}
+                    discountedPrice={course.price > 0 ? undefined : 0} // temp logic for discount
                     gradient={course.gradient}
                     featured={course.featured}
-                    skillLevel={course.skillLevel}
+                    skillLevel={course.difficulty.toLowerCase()}
                     searchQuery={debouncedSearchQuery}
                     onFavoriteToggle={toggleFavorite}
                     initialFavorited={isFavorite(course.id)}
@@ -284,7 +319,7 @@ export default function BrowsePage() {
               <h3 className="text-xl font-medium mb-2">No courses found</h3>
               <p className="text-muted-foreground">
                 {selectedCategory ? 
-                  `No courses found for ${categories.find(c => c.slug === selectedCategory)?.name}. Try another category.` :
+                  `No courses found for ${dbCategories.find(c => c.slug === selectedCategory)?.name}. Try another category.` :
                   'Try adjusting your filters or search terms'}
               </p>
               <Button onClick={clearFilters} className="mt-4">Clear All Filters</Button>

@@ -1,0 +1,345 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USER & AUTH
+// ============================================================
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  bio       String?
+  role      String   @default("STUDENT") // STUDENT, INSTRUCTOR, ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  instructorCourses Course[]         @relation("InstructorCourses")
+  enrollments       Enrollment[]
+  lessonProgress    LessonProgress[]
+  quizAttempts      QuizAttempt[]
+  certificates      Certificate[]
+  bookmarks         Bookmark[]
+  discussions       Discussion[]
+  replies           DiscussionReply[]
+  reviews           Review[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+// ============================================================
+// COURSES
+// ============================================================
+
+model Category {
+  id       String   @id @default(cuid())
+  name     String   @unique
+  slug     String   @unique
+  icon     String   @default("BookOpen")
+  gradient String   @default("from-blue-500 to-purple-600")
+  courses  Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  description      String
+  shortDescription String?
+  thumbnail        String?
+  gradient         String   @default("from-blue-500 to-purple-600")
+  instructorId     String
+  categoryId       String
+  difficulty       String   @default("BEGINNER") // BEGINNER, INTERMEDIATE, ADVANCED
+  totalHours       Float    @default(0)
+  price            Float    @default(0)
+  isFree           Boolean  @default(true)
+  isPublished      Boolean  @default(false)
+  featured         String?
+  rating           Float    @default(0)
+  ratingCount      Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  instructor   User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  category     Category     @relation(fields: [categoryId], references: [id])
+  modules      Module[]
+  enrollments  Enrollment[]
+  quizzes      Quiz[]
+  certificates Certificate[]
+  bookmarks    Bookmark[]
+  discussions  Discussion[]
+  reviews      Review[]
+
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  order       Int
+  courseId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  type        String      @default("TEXT") // VIDEO, TEXT, QUIZ, RESOURCE
+  content     String?     // Markdown/HTML for text lessons
+  videoUrl    String?     // YouTube URL or video embed URL
+  duration    Int         @default(0) // in minutes
+  order       Int
+  isFree      Boolean     @default(false) // Preview lesson
+  moduleId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  module   Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@map("lessons")
+}
+
+// ============================================================
+// ENROLLMENT & PROGRESS
+// ============================================================
+
+model Enrollment {
+  id          String           @id @default(cuid())
+  userId      String
+  courseId    String
+  enrolledAt  DateTime         @default(now())
+  completedAt DateTime?
+  status      String           @default("ACTIVE") // ACTIVE, COMPLETED, DROPPED
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime  @default(now())
+  watchedSeconds Int    @default(0)
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progress")
+}
+
+// ============================================================
+// QUIZZES
+// ============================================================
+
+model Quiz {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  courseId     String
+  passingScore Int      @default(70) // percentage
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id       String       @id @default(cuid())
+  text     String
+  order    Int
+  quizId   String
+  options  QuizOption[]
+  answers  QuizAnswer[]
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+}
+
+model QuizOption {
+  id         String  @id @default(cuid())
+  text       String
+  isCorrect  Boolean @default(false)
+  questionId String
+
+  question Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  QuizAnswer[]
+
+  @@map("quiz_options")
+}
+
+model QuizAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  quizId      String
+  score       Float
+  passed      Boolean
+  completedAt DateTime  @default(now())
+
+  user    User         @relation(fields: [userId], references: [id])
+  quiz    Quiz         @relation(fields: [quizId], references: [id])
+  answers QuizAnswer[]
+
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id         String @id @default(cuid())
+  attemptId  String
+  questionId String
+  optionId   String
+
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id])
+  option   QuizOption  @relation(fields: [optionId], references: [id])
+
+  @@map("quiz_answers")
+}
+
+// ============================================================
+// CERTIFICATES
+// ============================================================
+
+model Certificate {
+  id               String   @id @default(cuid())
+  userId           String
+  courseId         String
+  verificationCode String   @unique @default(cuid())
+  issuedAt         DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("certificates")
+}
+
+// ============================================================
+// BOOKMARKS
+// ============================================================
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("bookmarks")
+}
+
+// ============================================================
+// COMMUNITY
+// ============================================================
+
+model Discussion {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  courseId  String?
+  tags      String   @default("[]") // JSON array stored as string for SQLite
+  likes     Int      @default(0)
+  views     Int      @default(0)
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author  User              @relation(fields: [authorId], references: [id])
+  course  Course?           @relation(fields: [courseId], references: [id])
+  replies DiscussionReply[]
+
+  @@map("discussions")
+}
+
+model DiscussionReply {
+  id           String   @id @default(cuid())
+  content      String
+  authorId     String
+  discussionId String
+  likes        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  author     User       @relation(fields: [authorId], references: [id])
+  discussion Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+
+  @@map("discussion_replies")
+}
+
+// ============================================================
+// REVIEWS
+// ============================================================
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      // 1-5
+  comment   String?
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("reviews")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      String           // ENROLLMENT, COMPLETION, CERTIFICATE, REPLY, ANNOUNCEMENT, QUIZ_RESULT
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}

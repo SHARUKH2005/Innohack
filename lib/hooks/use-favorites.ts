@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 
 // Key for storing favorites in localStorage
-const FAVORITES_STORAGE_KEY = 'learnify_favorites';
+const FAVORITES_STORAGE_KEY = 'blocklearnx_favorites';
+const LEGACY_STORAGE_KEY = 'learnify_favorites';
 
 export function useFavorites() {
   // State to store favorite course IDs
@@ -14,7 +15,7 @@ export function useFavorites() {
   // On first render, load favorites from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (storedFavorites) {
         try {
           setFavorites(JSON.parse(storedFavorites));

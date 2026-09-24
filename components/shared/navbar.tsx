@@ -7,7 +7,7 @@ interface NavbarProps {
   title?: string;
 }
 
-export function Navbar({ title = "Learnify" }: NavbarProps) {
+export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
   const pathname = usePathname();
 
   const routes = [

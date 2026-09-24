@@ -1,10 +1,10 @@
-# Learnify
+# BlockLearnX
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.0.0-blue?style=flat-square&logo=next.js) ![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?style=flat-square&logo=typescript) ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.3.0-blue?style=flat-square&logo=tailwind-css) ![Clerk](https://img.shields.io/badge/Clerk-Authentication-blue?style=flat-square&logo=clerk) ![Node.js](https://img.shields.io/badge/Node.js-18.0.0-green?style=flat-square&logo=node.js) ![Vercel](https://img.shields.io/badge/Vercel-Hosting-black?style=flat-square&logo=vercel) ![React](https://img.shields.io/badge/React-18.0.0-blue?style=flat-square&logo=react) ![PostCSS](https://img.shields.io/badge/PostCSS-CSS%20Processing-red?style=flat-square&logo=postcss) ![Serverless](https://img.shields.io/badge/Serverless-Functions-orange?style=flat-square&logo=serverless)
 
-A professional-grade Learning Management System (LMS) built with modern web technologies. Learnify is designed to provide a seamless and secure learning experience for users, featuring robust authentication, interactive course management, and comprehensive progress tracking.
+A professional-grade Learning Management System (LMS) built with modern web technologies. BlockLearnX is designed to provide a seamless and secure learning experience for users, featuring robust authentication, interactive course management, and comprehensive progress tracking.
 
-### Live URL
+## Live URL
 
 [https://learnify-new-1.vercel.app/dashboard](https://learnify-new-1.vercel.app/dashboard)
 
@@ -13,74 +13,79 @@ A professional-grade Learning Management System (LMS) built with modern web tech
 ## Website Pages
 
 ### Landing Page
-<div align="center">
-  <img src="assets/images/img-landing.png" alt="Landing Page" width="600" />
-</div>
-<p>The main entry point to Learnify, showcasing its features and inviting users to sign up or log in.</p>
+
+![Landing Page](assets/images/img-landing.png)
+
+The main entry point to BlockLearnX, showcasing its features and inviting users to sign up or log in.
 
 ### Sign-Up Page
-<div align="center">
-  <img src="assets/images/img-sign-up.png" alt="Sign-Up Page" width="600" />
-</div>
-<p>Allows new users to create an account and start their learning journey.</p>
 
-### Dashboard
-<div align="center">
-  <img src="assets/images/img-dashboard.png" alt="Dashboard" width="600" />
-</div>
-<p>Provides an overview of the user's enrolled courses, progress, and quick access to resume learning.</p>
+![Sign-Up Page](assets/images/img-sign-up.png)
+
+Allows new users to create an account and start their learning journey.
+
+### User Dashboard Page
+
+![Dashboard](assets/images/img-dashboard.png)
+
+Provides an overview of the user's enrolled courses, progress, and quick access to resume learning.
 
 ### Browse Courses
-<div align="center">
-  <img src="assets/images/img-browse-courses.png" alt="Browse Courses" width="600" />
-</div>
-<p>Displays a catalog of available courses, allowing users to explore and enroll in new learning opportunities.</p>
+
+![Browse Courses](assets/images/img-browse-courses.png)
+
+Displays a catalog of available courses, allowing users to explore and enroll in new learning opportunities.
 
 ### Community Page
-<div align="center">
-  <img src="assets/images/img-community.png" alt="Community Page" width="600" />
-</div>
-<p>Engage with other learners through discussions, Q&A, and resource sharing.</p>
+
+![Community Page](assets/images/img-community.png)
+
+Engage with other learners through discussions, Q&A, and resource sharing.
 
 ### Courses Page
-<div align="center">
-  <img src="assets/images/img-courses.png" alt="Courses Page" width="600" />
-</div>
-<p>Detailed information about individual courses, including curriculum and learning objectives.</p>
+
+![Courses Page](assets/images/img-courses.png)
+
+Detailed information about individual courses, including curriculum and learning objectives.
 
 ### Progress Page
-<div align="center">
-  <img src="assets/images/img-progress.png" alt="Progress Page" width="600" />
-</div>
-<p>Track your learning progress with visual indicators and detailed analytics.</p>
+
+![Progress Page](assets/images/img-progress.png)
+
+Track your learning progress with visual indicators and detailed analytics.
 
 ---
 
 ## Features
 
 ### Authentication
+
 - **Email/Password Login**: Secure credential-based sign-in.
 - **Google Authentication**: Easy login with Google accounts.
 - **Password Reset**: Secure password recovery via email.
 - **Session Management**: Track and manage active sessions across devices.
 - **Two-Factor Authentication (2FA)**: Enhanced account security.
 
-### Dashboard
+### Dashboard & Analytics
+
 - **Course Overview**: View enrolled courses and progress.
 - **Progress Tracking**: Visual indicators for course completion.
 - **Quick Access**: Resume learning from where you left off.
 
 ### Course Management
+
 - **Course Catalog**: Browse and filter available courses.
 - **Dynamic Course Pages**: Detailed course information and curriculum.
 - **Learning Paths**: Structured learning sequences.
 
 ### Community Features
+
 - **Discussion Forums**: Engage with other learners.
 - **Q&A**: Ask and answer questions.
 - **Resource Sharing**: Share learning materials.
 
 ### Security
+
 - **Protected Routes**: Middleware ensures only authenticated users access sensitive pages.
 - **IP and Device Tracking**: Monitor login activity for suspicious behavior.
 - **Content Security Policies**: Prevent unauthorized access and attacks.
@@ -89,7 +94,8 @@ A professional-grade Learning Management System (LMS) built with modern web tech
 
 ## How It Works
 
-Learnify is a full-stack web application leveraging the following technologies:
+BlockLearnX is a full-stack web application leveraging the following technologies:
+
 - **Next.js**: For server-side rendering and file-based routing.
 - **TypeScript**: Ensures type safety and better developer experience.
 - **Tailwind CSS**: Provides utility-first styling for rapid UI development.
@@ -101,40 +107,46 @@ Learnify is a full-stack web application leveraging the following technologies:
 ## Setup Instructions
 
 1. **Clone the Repository**:
+
    ```bash
    git clone https://github.com/jjacobsonn/lms-framework.git
    cd lms-framework
    ```
 
 2. **Install Dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables**:
    - Copy the example environment file:
+
      ```bash
      cp .env.example .env.local
      ```
+
    - Update `.env.local` with your Clerk API keys and other required configurations.
 
 4. **Run the Development Server**:
+
    ```bash
    npm run dev
    ```
+
    The application will be available at `http://localhost:3000`.
 
 ---
 
 ## Deployment
 
-Learnify is deployed on Vercel, a platform optimized for Next.js applications. Vercel provides seamless integration with GitHub, automatic deployments, and serverless functions.
+BlockLearnX is deployed on Vercel, a platform optimized for Next.js applications. Vercel provides seamless integration with GitHub, automatic deployments, and serverless functions.
 
 ### Live Demo
 
 You can access the live application here:
 
-[Learnify Dashboard](https://learnify-new-1.vercel.app/dashboard){:target="_blank"}
+[BlockLearnX Dashboard](https://learnify-new-1.vercel.app/dashboard)
 
 ### Hosting Details
 
