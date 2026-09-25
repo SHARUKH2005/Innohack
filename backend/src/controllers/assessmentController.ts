@@ -142,3 +142,28 @@ export async function aiEvaluateAssessment(
     });
   }
 }
+
+export async function getUserCourseAssessment(req: Request, res: Response) {
+  try {
+    const { userId, courseId } = req.params;
+
+    const { data, error } = await supabase
+      .from("assessments")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("course_id", courseId);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    const passed = (data || []).find((a: any) => a.status === "passed");
+    if (passed) {
+      return res.json({ passed: true, assessment: passed });
+    }
+
+    return res.json({ passed: false, assessments: data || [] });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to check assessment status" });
+  }
+}

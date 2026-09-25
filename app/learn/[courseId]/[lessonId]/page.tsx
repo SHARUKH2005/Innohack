@@ -26,9 +26,11 @@ import {
   Code,
   StickyNote,
   MessageSquare,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
+import { createClient } from "@/lib/supabase/client";
 import {
   getLesson,
   getSurroundingLessons,
@@ -57,15 +59,27 @@ export default function LearningPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "resources" | "quiz" | "ai-tutor">("content");
-  
+
   // Progress states
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [totalEarnedMX, setTotalEarnedMX] = useState<number>(0);
-  
-  // Modals & Celebrations
+
+  // Video completion state
+  const [videoEnded, setVideoEnded] = useState<boolean>(false);
+
+  // Modals & Certificate Flow States
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [previewResource, setPreviewResource] = useState<LessonResource | null>(null);
+
+  // Certificate Eligibility & Form States
+  const [showCertDetailsModal, setShowCertDetailsModal] = useState(false);
+  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
+  const [studentNameInput, setStudentNameInput] = useState("");
+  const [assessmentScore, setAssessmentScore] = useState<number>(95);
+  const [assessmentIdVal, setAssessmentIdVal] = useState<string>("");
+  const [certIssuing, setCertIssuing] = useState(false);
+  const [certIssuedResult, setCertIssuedResult] = useState<any>(null);
 
   // Code copy feedback
   const [copiedCode, setCopiedCode] = useState(false);
@@ -89,19 +103,82 @@ export default function LearningPage() {
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
 
-  // Load progress on mount
+  // Load real backend progress & user balance on mount / route change
   useEffect(() => {
-    const progress = loadCourseProgress(courseId);
-    setCompletedLessonIds(progress.completedLessons);
-    setTotalEarnedMX(progress.totalEarnedMX);
+    async function init() {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      let userId: string | null = null;
 
-    // Load saved notes for this lesson
-    const savedNotes = localStorage.getItem(`notes_${courseId}_${lessonId}`);
-    if (savedNotes) {
-      setNotes(savedNotes);
-    } else {
-      setNotes("");
+      // 1. Determine authenticated or active student ID
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userId = user.id;
+          setStudentNameInput(user.user_metadata?.full_name || user.email?.split("@")[0] || "Student Learner");
+        } else {
+          const res = await fetch(`${BACKEND_URL}/api/users`);
+          if (res.ok) {
+            const users = await res.json();
+            if (Array.isArray(users) && users.length > 0) {
+              userId = users[0].id;
+              setStudentNameInput(users[0].name || "Student Learner");
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error retrieving user identity:", e);
+        setStudentNameInput("Student Learner");
+      }
+
+      // 2. Fetch real lesson progress from Supabase backend & merge with local cache
+      const localProgress = loadCourseProgress(courseId);
+      let realCompletedIds: string[] = Array.from(new Set(localProgress.completedLessons));
+
+      if (userId) {
+        try {
+          const pRes = await fetch(`${BACKEND_URL}/api/progress/${userId}/${courseId}`);
+          if (pRes.ok) {
+            const pData = await pRes.json();
+            if (Array.isArray(pData)) {
+              const dbCompleted = pData
+                .filter((p: any) => p.completed)
+                .map((p: any) => p.lesson_id);
+              realCompletedIds = Array.from(new Set([...realCompletedIds, ...dbCompleted]));
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching lesson progress from backend:", e);
+        }
+      }
+
+      setCompletedLessonIds(realCompletedIds);
+
+      // 3. Fetch real user MX balance from backend/blockchain
+      if (userId) {
+        try {
+          const bRes = await fetch(`${BACKEND_URL}/api/users/${userId}/balance`);
+          if (bRes.ok) {
+            const bData = await bRes.json();
+            setTotalEarnedMX(Math.round(Number(bData.balance) || 0));
+          }
+        } catch (e) {
+          console.error("Error fetching user MX balance:", e);
+        }
+      }
+
+      // 4. Video completion state for current lesson
+      if (lessonData) {
+        const currentSlug = lessonData.lesson.slug;
+        const currentId = lessonData.lesson.id;
+        const isComp = realCompletedIds.includes(currentSlug) || realCompletedIds.includes(currentId);
+        setVideoEnded(isComp);
+      } else {
+        setVideoEnded(false);
+      }
     }
+
+    init();
 
     // Reset quiz state on lesson change
     setSelectedQuizOption(null);
@@ -129,19 +206,174 @@ export default function LearningPage() {
   const isLessonCompleted =
     completedLessonIds.includes(lesson.id) || completedLessonIds.includes(lesson.slug);
 
-  // Handle Complete Lesson action
-  const handleCompleteLesson = () => {
-    // Save progress to local state and localStorage
-    const updated = saveLessonCompletion(courseId, lesson.slug, lesson.bountyMX);
-    setCompletedLessonIds(updated.completedLessons);
-    setTotalEarnedMX(updated.totalEarnedMX);
+  // Lesson & Module position calculations
+  const isLastLessonOfCourse = surrounding.nextLesson === null;
+  const currentModuleObj = curriculum.modules.find(m => m.id === `mod-${lesson.moduleIndex}`) || curriculum.modules[(lesson.moduleIndex || 1) - 1];
+  const currentModuleLessons = currentModuleObj ? currentModuleObj.lessons : [];
+  const isLastLessonOfModule = currentModuleLessons.length > 0 && (currentModuleLessons[currentModuleLessons.length - 1].slug === lesson.slug || currentModuleLessons[currentModuleLessons.length - 1].id === lesson.id);
 
-    // Trigger celebration effects
-    setShowConfetti(true);
-    setShowRewardModal(true);
+  // Handle Video Ended Callback
+  const handleVideoEnded = () => {
+    setVideoEnded(true);
   };
 
-  // Navigate to next lesson
+  // Handle Complete Lesson action
+  const handleCompleteLesson = async (): Promise<boolean> => {
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+    let userId: string | null = null;
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id || null;
+
+      if (!userId) {
+        const res = await fetch(`${BACKEND_URL}/api/users`);
+        if (res.ok) {
+          const users = await res.json();
+          if (Array.isArray(users) && users.length > 0) {
+            userId = users[0].id;
+          }
+        }
+      }
+
+      if (userId) {
+        console.log("COMPLETION REQUEST sent for lesson:", lesson.slug);
+        const compRes = await fetch(`${BACKEND_URL}/api/progress/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            courseId,
+            lessonId: lesson.slug,
+          }),
+        });
+
+        if (compRes.ok) {
+          const compData = await compRes.json();
+          console.log("COMPLETION RESPONSE:", compData);
+        } else {
+          console.error("COMPLETION RESPONSE ERROR:", await compRes.text());
+        }
+      }
+    } catch (e) {
+      console.error("Failed to sync progress with backend API:", e);
+    }
+
+    setCompletedLessonIds((prev) => Array.from(new Set([...prev, lesson.slug, lesson.id])));
+    saveLessonCompletion(courseId, lesson.slug, 0);
+    saveLessonCompletion(courseId, lesson.id, 0);
+    setShowConfetti(true);
+    return true;
+  };
+
+  // Handle Main Continue Action
+  const handleContinueAction = async () => {
+    console.log("▶ CURRENT LESSON:", lesson.slug);
+    console.log("▶ NEXT LESSON:", surrounding.nextLesson?.slug || "NONE (Last Lesson Of Course)");
+
+    await handleCompleteLesson();
+
+    // Check if this was the final lesson of the entire course (all 3 modules finished)
+    if (isLastLessonOfCourse) {
+      console.log("▶ Last lesson of course finished. Checking assessment status...");
+      try {
+        const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        let userId = user?.id;
+
+        if (!userId) {
+          const uRes = await fetch(`${BACKEND_URL}/api/users`);
+          if (uRes.ok) {
+            const users = await uRes.json();
+            if (Array.isArray(users) && users.length > 0) userId = users[0].id;
+          }
+        }
+
+        if (userId) {
+          const aRes = await fetch(`${BACKEND_URL}/api/assessments/user/${userId}/course/${courseId}`);
+          if (aRes.ok) {
+            const aData = await aRes.json();
+            if (aData.passed && aData.assessment) {
+              setAssessmentScore(aData.assessment.score || 95);
+              setAssessmentIdVal(aData.assessment.id);
+              setShowCertDetailsModal(true);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to check assessment status:", e);
+      }
+
+      // If assessment not passed or error, show assessment required modal
+      setShowAssessmentModal(true);
+      return;
+    }
+
+    // Move to next lesson
+    if (surrounding.nextLesson) {
+      const targetUrl = `/learn/${courseId}/${surrounding.nextLesson.slug}`;
+      console.log("▶ NAVIGATION TARGET:", targetUrl);
+      router.push(targetUrl);
+    } else {
+      console.warn("No next lesson found for course:", courseId);
+    }
+  };
+
+  // Generate Blockchain Certificate Handler
+  const handleIssueCertificate = async () => {
+    setCertIssuing(true);
+    try {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      let userId = user?.id;
+
+      if (!userId) {
+        const uRes = await fetch(`${BACKEND_URL}/api/users`);
+        if (uRes.ok) {
+          const users = await uRes.json();
+          if (Array.isArray(users) && users.length > 0) userId = users[0].id;
+        }
+      }
+
+      const studentNameInput = prompt("Please enter your full name as you would like it to appear on your official certificate:", "Sharukh Sameer");
+      if (!studentNameInput || !studentNameInput.trim()) {
+        setCertIssuing(false);
+        return;
+      }
+
+      const verificationCode = `BLX-CERT-${Date.now().toString(36).toUpperCase()}`;
+
+      const res = await fetch(`${BACKEND_URL}/api/certificates/issue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          courseId,
+          assessmentId: assessmentIdVal || "solidity-final-exam",
+          verificationCode,
+          studentName: studentNameInput.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        setCertIssuedResult(result);
+      } else {
+        const err = await res.json();
+        alert(`Certificate issuance notice: ${err.error || "Please complete final exam first"}`);
+      }
+    } catch (e) {
+      console.error("Failed to issue certificate:", e);
+      alert("Certificate issuance failed. Please check network connection.");
+    } finally {
+      setCertIssuing(false);
+    }
+  };
+
   const handleNextLesson = () => {
     if (surrounding.nextLesson) {
       router.push(`/learn/${courseId}/${surrounding.nextLesson.slug}`);
@@ -173,7 +405,7 @@ export default function LearningPage() {
 
     setTimeout(() => {
       let aiReply = `Great question regarding "${lesson.title}". In Solidity 0.8.x and the EVM architecture, state transitions must always be verified deterministically. Remember to prioritize the Checks-Effects-Interactions pattern when dealing with external interactions!`;
-      
+
       const lower = userQ.toLowerCase();
       if (lower.includes("gas") || lower.includes("cost")) {
         aiReply = `Regarding gas optimization: storage writes (SSTORE) are the most expensive operations (~20,000 gas for cold slot initialization). Using 'calldata' for read-only external parameters and packing variables into 32-byte slots will drastically lower execution costs.`;
@@ -206,10 +438,10 @@ export default function LearningPage() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-900 text-slate-800">
-      
+
       {/* ── TOP NAV BAR (Compact, Distraction-Free Player Header) ── */}
       <header className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between gap-4 shrink-0 z-30">
-        
+
         {/* Left: Brand + Course breadcrumb */}
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -250,7 +482,7 @@ export default function LearningPage() {
 
         {/* Right: Balance + Navigation Arrows */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          
+
           {/* User Reward MX Badge */}
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold font-mono">
             <Coins className="h-3.5 w-3.5 fill-amber-400" />
@@ -297,10 +529,10 @@ export default function LearningPage() {
 
       {/* ── MAIN BODY: SIDEBAR + CONTENT ── */}
       <div className="flex-1 flex overflow-hidden relative">
-        
+
         {/* ── LEFT: LESSONS SIDEBAR ── */}
         {sidebarOpen && (
-          <div className="hidden lg:block h-full">
+          <div className="hidden lg:block h-full shrink-0 min-h-0 overflow-hidden">
             <LearningSidebar
               curriculum={curriculum}
               currentLessonId={lesson.slug}
@@ -339,30 +571,30 @@ export default function LearningPage() {
 
         {/* ── RIGHT: MAIN LEARNING WORKSPACE ── */}
         <main className="flex-1 overflow-y-auto bg-slate-900 flex flex-col justify-between">
-          
+
           <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl mx-auto w-full">
-            
+
             {/* 1. VIDEO PLAYER SECTION */}
             <section className="space-y-4">
               <VideoPlayer
                 lesson={lesson}
                 isCompleted={isLessonCompleted}
                 onLessonCompletePrompt={handleCompleteLesson}
+                onVideoEnded={handleVideoEnded}
               />
             </section>
 
             {/* 2. LESSON TABS: Content, PDF/Resources, Quiz, AI Tutor */}
             <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              
+
               {/* Tab navigation headers */}
               <div className="flex items-center border-b border-slate-200 bg-slate-50/80 px-4 sm:px-6 overflow-x-auto scrollbar-none">
                 <button
                   onClick={() => setActiveTab("content")}
-                  className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${
-                    activeTab === "content"
+                  className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === "content"
                       ? "border-[#0056D2] text-[#0056D2] bg-white rounded-t-lg"
                       : "border-transparent text-slate-600 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <BookOpen className="h-4 w-4" />
                   <span>Lesson Content</span>
@@ -370,11 +602,10 @@ export default function LearningPage() {
 
                 <button
                   onClick={() => setActiveTab("resources")}
-                  className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${
-                    activeTab === "resources"
+                  className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === "resources"
                       ? "border-[#0056D2] text-[#0056D2] bg-white rounded-t-lg"
                       : "border-transparent text-slate-600 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <FileText className="h-4 w-4" />
                   <span>PDF &amp; Resources ({lesson.resources.length})</span>
@@ -383,11 +614,10 @@ export default function LearningPage() {
                 {lesson.quiz && (
                   <button
                     onClick={() => setActiveTab("quiz")}
-                    className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${
-                      activeTab === "quiz"
+                    className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === "quiz"
                         ? "border-[#0056D2] text-[#0056D2] bg-white rounded-t-lg"
                         : "border-transparent text-slate-600 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     <HelpCircle className="h-4 w-4" />
                     <span>Knowledge Check</span>
@@ -399,11 +629,10 @@ export default function LearningPage() {
 
                 <button
                   onClick={() => setActiveTab("ai-tutor")}
-                  className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${
-                    activeTab === "ai-tutor"
+                  className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition-colors flex items-center gap-2 ${activeTab === "ai-tutor"
                       ? "border-[#0056D2] text-[#0056D2] bg-white rounded-t-lg"
                       : "border-transparent text-slate-600 hover:text-slate-900"
-                  }`}
+                    }`}
                 >
                   <Bot className="h-4 w-4 text-purple-600" />
                   <span>AI Learning Assistant</span>
@@ -412,11 +641,11 @@ export default function LearningPage() {
 
               {/* Tab Content Panes */}
               <div className="p-6 sm:p-8">
-                
+
                 {/* ── TAB 1: LESSON CONTENT ── */}
                 {activeTab === "content" && (
                   <div className="space-y-6">
-                    
+
                     {/* Lesson Title & Summary */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -667,11 +896,10 @@ export default function LearningPage() {
                     {/* Submit / Results */}
                     {quizSubmitted ? (
                       <div
-                        className={`p-4 rounded-xl border text-xs space-y-1.5 ${
-                          quizIsCorrect
+                        className={`p-4 rounded-xl border text-xs space-y-1.5 ${quizIsCorrect
                             ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                             : "bg-red-50 border-red-200 text-red-900"
-                        }`}
+                          }`}
                       >
                         <p className="font-bold flex items-center gap-1.5 text-sm">
                           {quizIsCorrect ? "🎉 Correct Answer!" : "❌ Incorrect, Review Concept"}
@@ -743,9 +971,8 @@ export default function LearningPage() {
                       {aiChat.map((msg, i) => (
                         <div
                           key={i}
-                          className={`flex gap-3 text-xs leading-relaxed ${
-                            msg.role === "user" ? "justify-end" : "justify-start"
-                          }`}
+                          className={`flex gap-3 text-xs leading-relaxed ${msg.role === "user" ? "justify-end" : "justify-start"
+                            }`}
                         >
                           {msg.role === "assistant" && (
                             <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 text-[10px] font-bold">
@@ -753,11 +980,10 @@ export default function LearningPage() {
                             </div>
                           )}
                           <div
-                            className={`p-3 rounded-2xl max-w-[85%] ${
-                              msg.role === "user"
+                            className={`p-3 rounded-2xl max-w-[85%] ${msg.role === "user"
                                 ? "bg-[#0056D2] text-white rounded-br-xs"
                                 : "bg-slate-100 text-slate-800 rounded-bl-xs"
-                            }`}
+                              }`}
                           >
                             {msg.text}
                           </div>
@@ -819,7 +1045,7 @@ export default function LearningPage() {
           {/* ── 3. BOTTOM STICKY ACTION BAR: [Complete Lesson & Earn +15 MX] ── */}
           <footer className="sticky bottom-0 bg-white border-t border-slate-200 px-4 sm:px-8 py-3.5 shadow-lg z-20">
             <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
-              
+
               {/* Prev Lesson */}
               <div>
                 {surrounding.prevLesson ? (
@@ -845,26 +1071,28 @@ export default function LearningPage() {
                 )}
               </div>
 
-              {/* Central Main Action Button: [Complete Lesson] */}
+              {/* Central Main Action Button: [Dynamic Continue Action after Video Ends] */}
               <div className="flex items-center gap-3">
-                {isLessonCompleted ? (
-                  <Button
-                    onClick={handleNextLesson}
-                    disabled={!surrounding.nextLesson}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm h-11 px-6 rounded-xl shadow-md transition-all flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Completed ✓ Continue Next</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                {(!videoEnded && !isLessonCompleted) ? (
+                  <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
+                    <Clock className="h-4 w-4 text-amber-500 animate-pulse" />
+                    <span>Watch video to finish lesson &amp; continue</span>
+                  </div>
                 ) : (
                   <Button
                     id="complete-lesson-btn"
-                    onClick={handleCompleteLesson}
+                    onClick={handleContinueAction}
                     className="bg-gradient-to-r from-[#0056D2] to-blue-600 hover:from-[#00419e] hover:to-blue-700 text-white font-black text-xs sm:text-sm h-11 px-6 sm:px-8 rounded-xl shadow-lg shadow-blue-600/25 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <Sparkles className="h-4 w-4 text-amber-300 animate-spin" style={{ animationDuration: "3s" }} />
-                    <span>Complete Lesson &amp; Earn +{lesson.bountyMX} MX</span>
+                    <Sparkles className="h-4 w-4 text-amber-300" />
+                    <span>
+                      {isLastLessonOfCourse
+                        ? "Complete Course & Verify Certificate Eligibility →"
+                        : isLastLessonOfModule
+                        ? "Complete Module & Continue →"
+                        : "Continue to Next Lesson →"}
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -923,6 +1151,215 @@ export default function LearningPage() {
         isOpen={!!previewResource}
         onClose={() => setPreviewResource(null)}
       />
+
+      {/* ── MODAL: CERTIFICATE DETAILS & CONFIRMATION ── */}
+      {showCertDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 sm:p-8 space-y-6 relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-2xl -z-10 pointer-events-none" />
+
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-blue-50 text-[#0056D2] border border-blue-100 shadow-2xs">
+                  <Award className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">
+                    Certificate &amp; Sepolia NFT Minting
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Confirm your details to generate your verified Sepolia NFT Certificate.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCertDetailsModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {certIssuedResult ? (
+              /* Success View */
+              <div className="space-y-5 text-center py-2">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+                  <CheckCircle2 className="h-8 w-8" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-xl font-black text-slate-900">
+                    🎉 Certificate &amp; NFT Minted!
+                  </h4>
+                  <p className="text-xs text-slate-600 max-w-xs mx-auto">
+                    Your blockchain certificate and NFT have been deployed to Ethereum Sepolia &amp; uploaded to IPFS.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2 font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Certificate ID:</span>
+                    <span className="font-bold text-slate-900">{certIssuedResult.certificate?.certificate_id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Token ID:</span>
+                    <span className="font-bold text-[#0056D2]">#{certIssuedResult.certificate?.token_id || "1"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Network:</span>
+                    <span className="font-bold text-purple-700">Ethereum Sepolia</span>
+                  </div>
+                  {certIssuedResult.certificate?.tx_hash && (
+                    <div className="flex justify-between truncate">
+                      <span className="text-slate-500">Tx Hash:</span>
+                      <span className="text-slate-700 font-sans truncate max-w-[180px]">{certIssuedResult.certificate.tx_hash}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2.5 pt-2">
+                  <Button
+                    asChild
+                    className="bg-[#0056D2] hover:bg-[#00419e] text-white font-bold text-xs h-11 rounded-xl shadow-md w-full"
+                  >
+                    <Link href={`/verify/certificate/${certIssuedResult.certificate?.certificate_id}`}>
+                      View &amp; Verify On-Chain Certificate →
+                    </Link>
+                  </Button>
+                  {certIssuedResult.certificate?.tx_hash && (
+                    <a
+                      href={`https://sepolia.etherscan.io/tx/${certIssuedResult.certificate.tx_hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#0056D2] py-1"
+                    >
+                      <span>View Sepolia Etherscan Transaction</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Input Form View */
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Student Full Name (Printed on Certificate)
+                  </label>
+                  <input
+                    type="text"
+                    value={studentNameInput}
+                    onChange={(e) => setStudentNameInput(e.target.value)}
+                    placeholder="Enter full legal name"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-900 focus:bg-white focus:border-[#0056D2] focus:outline-none transition-colors"
+                  />
+                  <p className="text-[11px] text-slate-400">
+                    Prefilled from your verified student profile. You can edit before minting.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                  <div>
+                    <span className="text-slate-500 block text-[10px] font-bold uppercase">Course Name</span>
+                    <span className="font-bold text-slate-900 truncate block mt-0.5">{curriculum.courseTitle}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px] font-bold uppercase">Assessment Score</span>
+                    <span className="font-bold text-emerald-600 block mt-0.5">{assessmentScore}% Passed</span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs leading-relaxed space-y-1">
+                  <p className="font-bold text-amber-900 flex items-center gap-1">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                    Blockchain &amp; IPFS Verification
+                  </p>
+                  <p className="text-amber-800/90 text-[11px]">
+                    Token ID, Smart Contract Address, Sepolia Tx Hash, QR Code, and IPFS Metadata CIDs will be generated automatically and etched onto the certificate SVG.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCertDetailsModal(false)}
+                    className="text-slate-600 text-xs h-11 px-5 rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleIssueCertificate}
+                    disabled={certIssuing || !studentNameInput.trim()}
+                    className="bg-[#0056D2] hover:bg-[#00419e] text-white font-bold text-xs h-11 px-6 rounded-xl shadow-lg shadow-blue-600/20 flex items-center gap-2"
+                  >
+                    {certIssuing ? (
+                      <>
+                        <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        <span>Generating &amp; Minting Certificate...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Award className="h-4 w-4" />
+                        <span>Generate &amp; Mint Blockchain Certificate</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: ASSESSMENT REQUIRED ── */}
+      {showAssessmentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 sm:p-8 space-y-5 text-center relative overflow-hidden">
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto border border-amber-200">
+              <Award className="h-8 w-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-slate-900">
+                Final Assessment Required
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                You have finished all 3 modules in this course! To receive your official Sepolia Blockchain Certificate NFT, you must complete and pass the final course assessment.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 text-left text-xs space-y-1.5 text-blue-950">
+              <p className="font-bold flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-[#0056D2]" />
+                Assessment Criteria
+              </p>
+              <ul className="list-disc list-inside text-slate-700 text-[11px] space-y-1">
+                <li>Evaluated by Gemini AI evaluation engine</li>
+                <li>Passing score threshold: 70% or higher</li>
+                <li>Unlocks +50 MX token reward + Sepolia Certificate NFT</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col gap-2.5 pt-2">
+              <Button
+                asChild
+                className="bg-[#0056D2] hover:bg-[#00419e] text-white font-bold text-xs h-11 rounded-xl shadow-md w-full"
+              >
+                <Link href={`/assessment/${courseId}-final-exam`}>
+                  Take Final Course Assessment Now →
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setShowAssessmentModal(false)}
+                className="text-slate-500 hover:text-slate-800 text-xs h-9"
+              >
+                Back to Lessons
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

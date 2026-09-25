@@ -31,6 +31,9 @@ export async function generateCertificate(
 
   let svg = await fs.readFile(templatePath, "utf-8");
 
+  const formatHash = (h: string) => (h && h.length > 22 ? `${h.slice(0, 10)}...${h.slice(-6)}` : h);
+  const formatCid = (c: string) => (c && c.length > 24 ? `${c.slice(0, 15)}...` : c);
+
   const replacements: Record<string, string> = {
     "{STUDENT_NAME}": escapeXml(data.studentName),
     "{COURSE_NAME}": escapeXml(data.courseName),
@@ -39,12 +42,12 @@ export async function generateCertificate(
     "{COMPLETION_DATE}": escapeXml(data.completionDate),
 
     "{TOKEN_ID}": escapeXml(data.tokenId),
-    "{CONTRACT_ADDRESS}": escapeXml(data.contractAddress),
+    "{CONTRACT_ADDRESS}": escapeXml(formatHash(data.contractAddress)),
     "{BLOCKCHAIN}": escapeXml(data.blockchain),
-    "{TRANSACTION_HASH}": escapeXml(data.transactionHash),
+    "{TRANSACTION_HASH}": escapeXml(formatHash(data.transactionHash)),
 
-    "{METADATA_URI}": escapeXml(data.metadataURI),
-    "{CERTIFICATE_URI}": escapeXml(data.certificateURI),
+    "{METADATA_URI}": escapeXml(formatCid(data.metadataURI)),
+    "{CERTIFICATE_URI}": escapeXml(formatCid(data.certificateURI)),
     "{VERIFICATION_URL}": escapeXml(data.verificationURL),
 
     "{QR_CODE}": data.qrCodeDataURI ?? "",

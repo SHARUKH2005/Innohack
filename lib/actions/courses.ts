@@ -60,6 +60,16 @@ export async function getCourses({
     return coursesWithStats;
   } catch (error) {
     console.error("[GET_COURSES]", error);
+    try {
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      const res = await fetch(`${BACKEND_URL}/api/courses`);
+      if (res.ok) {
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      }
+    } catch (e) {
+      console.error("[GET_COURSES_BACKEND_FALLBACK]", e);
+    }
     return [];
   }
 }

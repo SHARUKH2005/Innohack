@@ -7,7 +7,9 @@ import enrollmentRoutes from "./routes/enrollmentRoutes";
 import progressRoutes from "./routes/progressRoutes";
 import assessmentRoutes from "./routes/assessmentRoutes";
 import certificateRoutes from "./routes/certificate.routes";
-
+import rewardRoutes from "./routes/reward.routes";
+import nftRoutes from "./routes/nft.routes";
+import marketplaceRoutes from "./routes/marketplace.routes";
 
 dotenv.config();
 
@@ -28,6 +30,9 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/rewards", rewardRoutes);
+app.use("/api/nfts", nftRoutes);
+app.use("/api/marketplace", marketplaceRoutes);
 
 const PORT = process.env.PORT || 5000;
 

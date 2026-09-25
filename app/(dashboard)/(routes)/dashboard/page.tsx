@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   BookOpen, 
@@ -31,16 +31,28 @@ import {
   Search,
   Filter,
   MoreVertical,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
+import { createClient } from "@/lib/supabase/client";
+import { getStudentData } from "@/lib/student-data";
 
 export default function LearnerDashboardPage() {
-  const [balanceMX, setBalanceMX] = useState(2450);
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("Learner");
+  const [walletAddr, setWalletAddr] = useState<string | null>(null);
+  const [balanceMX, setBalanceMX] = useState(0);
   const [claimedDaily, setClaimedDaily] = useState(false);
   const [activeTab, setActiveTab] = useState<"in-progress" | "completed" | "certificates">("in-progress");
   
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [rewardsList, setRewardsList] = useState<any[]>([]);
+  const [certificatesList, setCertificatesList] = useState<any[]>([]);
+  const [nftsList, setNftsList] = useState<any[]>([]);
+  const [allCourses, setAllCourses] = useState<any[]>([]);
+
   // Certificate inspection modal
   const [selectedCert, setSelectedCert] = useState<{
     id: string;
@@ -54,8 +66,64 @@ export default function LearnerDashboardPage() {
     hash: string;
     skills: string[];
     grade: string;
+    certCid?: string;
+    metaCid?: string;
   } | null>(null);
   const [copiedHash, setCopiedHash] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      let userId = user?.id;
+
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
+      if (!userId) {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/users`);
+          if (res.ok) {
+            const users = await res.json();
+            if (Array.isArray(users) && users.length > 0) {
+              const student = users.find((u: any) => u.role === "learner") || users[0];
+              userId = student.id;
+              setUserName(student.name || "Student Learner");
+              setWalletAddr(student.wallet_address || null);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch default user:", e);
+        }
+      } else {
+        setUserName(user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Student Learner");
+      }
+
+      if (userId) {
+        const studentData = await getStudentData(userId);
+        setBalanceMX(Number(studentData.balance || 0));
+        if (studentData.walletAddress) setWalletAddr(studentData.walletAddress);
+        setRewardsList(studentData.rewards || []);
+        setCertificatesList(studentData.certificates || []);
+        setNftsList(studentData.nfts || []);
+        setEnrolledCourses(studentData.enrollments || []);
+      }
+
+      try {
+        const cRes = await fetch(`${BACKEND_URL}/api/courses`);
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          setAllCourses(Array.isArray(cData) ? cData : []);
+        }
+      } catch (e) {
+        console.error("Failed to fetch courses:", e);
+      }
+
+      setLoading(false);
+    }
+
+    loadData();
+  }, []);
 
   const handleClaimDaily = () => {
     if (!claimedDaily) {
@@ -634,51 +702,83 @@ export default function LearnerDashboardPage() {
 
           {/* Certificate Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {certificates.map((cert) => (
+            {(certificatesList.length > 0 ? [
+              ...certificatesList.map((item: any) => ({
+                id: item.certificate_id || String(item.id),
+                title: item.courses?.title ? `${item.courses.title} Certificate` : "BlockLearnX Verified Certificate",
+                university: "BlockLearnX University Academy",
+                instructor: "BlockLearnX AI Auditor & Smart Contract Engine",
+                network: "Ethereum Sepolia",
+                tokenId: `#${item.token_id || "1"}`,
+                score: "100%",
+                grade: "Grade Achieved: 100% (Passed)",
+                date: item.issued_at ? new Date(item.issued_at).toLocaleDateString() : "Recently Issued",
+                hash: item.tx_hash || "0x7fe6ff2b8d9a052573c522152258016a232e977842212ca0745af01b1a8e5ad1",
+                skills: ["Solidity", "Smart Contract Security", "EVM Architecture", "AI Verification"],
+                sealColor: "text-[#0056D2]",
+                certCid: item.certificate_id || String(item.id),
+                svgUrl: `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/certificates/svg/${encodeURIComponent(item.certificate_id || item.id)}`,
+              })),
+              ...certificates.map(c => ({ ...c, svgUrl: `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/certificates/svg/${encodeURIComponent(c.id)}` })),
+            ] : certificates.map(c => ({ ...c, svgUrl: `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/certificates/svg/${encodeURIComponent(c.id)}` }))).map((cert) => (
               <div
                 key={cert.id}
-                onClick={() => setSelectedCert(cert)}
-                className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                onClick={() => setSelectedCert(cert as any)}
+                className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-xl transition-all cursor-pointer flex flex-col group relative overflow-hidden"
               >
-                {/* Top University Header */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <span className="text-xs font-bold text-slate-600 truncate">
-                      {cert.university}
+                {/* ── Certificate Preview Panel with QR aligned top-right ── */}
+                <div className="relative w-full bg-slate-950 overflow-hidden rounded-t-xl border-b border-slate-200" style={{ minHeight: "180px" }}>
+                  {/* Certificate SVG — fills the panel */}
+                  <img
+                    src={cert.svgUrl}
+                    alt={cert.title}
+                    className="w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    style={{ display: "block", minHeight: "180px", maxHeight: "200px" }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.2"; }}
+                  />
+                  {/* QR code — top-right corner, neatly inset */}
+                  <div className="absolute top-2.5 right-2.5 bg-white rounded-xl p-1.5 shadow-xl border border-slate-100 z-10" title="Scan to verify on-chain">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`http://localhost:3000/verify/certificate/${encodeURIComponent(cert.certCid || cert.id)}`)}`}
+                      alt="Verify QR"
+                      className="w-10 h-10 rounded-lg"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                  </div>
+                  {/* Verified badge — top-left */}
+                  <span className="absolute top-2.5 left-2.5 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100/90 text-emerald-800 border border-emerald-200 backdrop-blur-sm">
+                    <CheckCircle className="h-3 w-3" />
+                    Verified
+                  </span>
+                  {/* Token ID — bottom-left */}
+                  {cert.tokenId && (
+                    <span className="absolute bottom-2 left-2.5 z-10 font-mono text-[10px] text-white/70 bg-black/50 rounded px-1.5 py-0.5">
+                      {cert.tokenId}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                      Verified
-                    </span>
-                  </div>
-
-                  {/* Certificate Icon / Seal */}
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0056D2] group-hover:scale-105 transition-transform">
-                    <Award className="h-6 w-6" />
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#0056D2] transition-colors line-clamp-2">
-                      {cert.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Instructor: {cert.instructor}
-                    </p>
-                    <p className="text-[11px] font-semibold text-emerald-700 mt-0.5">
-                      {cert.grade}
-                    </p>
-                  </div>
+                  )}
                 </div>
 
-                {/* Footer specs */}
-                <div className="pt-4 mt-4 border-t border-slate-100 space-y-2 text-xs">
-                  <div className="flex justify-between text-slate-500 text-[11px]">
-                    <span>Network: <strong className="text-slate-800">{cert.network}</strong></span>
-                    <span className="font-mono text-[#0056D2]">SBT</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-[#0056D2] font-bold group-hover:underline">
-                    <span>Inspect On-Chain Proof</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
+                {/* ── Card Body ── */}
+                <div className="p-4 flex flex-col gap-2 flex-1">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                    {cert.university}
+                  </span>
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#0056D2] transition-colors line-clamp-2 leading-snug">
+                    {cert.title}
+                  </h4>
+                  <p className="text-[11px] font-semibold text-emerald-700">
+                    {cert.grade}
+                  </p>
+                  {/* Footer */}
+                  <div className="mt-auto pt-3 border-t border-slate-100 space-y-1.5 text-[11px]">
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span>Network: <strong className="text-slate-800">{cert.network}</strong></span>
+                      <span className="font-mono text-[#0056D2] font-bold">SBT</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[#0056D2] font-bold group-hover:underline">
+                      <span>Inspect Certificate &amp; SVG</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -830,7 +930,7 @@ export default function LearnerDashboardPage() {
           ======================================================== */}
       {selectedCert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full border border-slate-300 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-3xl w-full border border-slate-300 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
             
             <button
               onClick={() => setSelectedCert(null)}
@@ -839,41 +939,31 @@ export default function LearnerDashboardPage() {
               <X className="h-5 w-5" />
             </button>
 
+            {/* Generated Vector SVG Certificate View */}
+            <div className="rounded-xl border border-slate-300 bg-slate-950 p-3 text-center overflow-hidden">
+              <img
+                src={(selectedCert as any).svgUrl || `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/certificates/svg/${encodeURIComponent(selectedCert.certCid || selectedCert.id || selectedCert.tokenId)}`}
+                alt="Official Certificate SVG"
+                className="w-full h-auto max-h-[420px] object-contain mx-auto"
+              />
+            </div>
+
             {/* Certificate Header Box */}
-            <div className="border-4 border-double border-slate-200 p-6 rounded-xl bg-slate-50/50 space-y-4 text-center">
-              
-              <div className="flex items-center justify-center">
-                <Logo height={56} width={240} />
+            <div className="border border-slate-200 p-5 rounded-xl bg-slate-50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase tracking-widest text-slate-500 font-bold">
+                  {selectedCert.university}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                  {selectedCert.grade}
+                </span>
               </div>
-
-              <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">
-                {selectedCert.university}
+              <h3 className="text-xl font-bold text-slate-900">
+                {selectedCert.title}
+              </h3>
+              <p className="text-xs text-slate-600">
+                Instructors: {selectedCert.instructor} • Issued: {selectedCert.date}
               </p>
-
-              <div className="space-y-1">
-                <p className="text-xs text-slate-600">This is to certify that</p>
-                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  Sharukh
-                </h3>
-                <p className="text-xs text-slate-600">has successfully completed with honors</p>
-                <h4 className="text-lg sm:text-xl font-bold text-[#0056D2] pt-1">
-                  {selectedCert.title}
-                </h4>
-                <p className="text-xs text-slate-500 italic">
-                  An online non-credit specialization authorized by {selectedCert.university} and offered through BlockLearnX Protocol.
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 grid grid-cols-2 gap-4 text-left text-xs">
-                <div>
-                  <p className="text-slate-400">Instructors:</p>
-                  <p className="font-bold text-slate-800">{selectedCert.instructor}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-slate-400">Issue Date:</p>
-                  <p className="font-bold text-slate-800">{selectedCert.date}</p>
-                </div>
-              </div>
             </div>
 
             {/* On-Chain Soulbound Specs */}
@@ -916,27 +1006,28 @@ export default function LearnerDashboardPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  className="w-full text-slate-700 border-slate-300 hover:bg-slate-50 gap-2 text-xs font-bold"
-                  onClick={() => alert("Certificate PDF downloaded with cryptographic QR signature.")}
+                <a
+                  href={(selectedCert as any).svgUrl || `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/certificates/svg/${encodeURIComponent(selectedCert.certCid || selectedCert.id || selectedCert.tokenId)}`}
+                  download={`Certificate-${selectedCert.id}.svg`}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold py-3"
                 >
                   <Download className="h-4 w-4" />
-                  Download Certificate (PDF)
-                </Button>
-                <Button
-                  className="w-full bg-[#0056D2] hover:bg-[#00419e] text-white gap-2 text-xs font-bold"
-                  onClick={() => alert("Added verified credential to LinkedIn profile!")}
+                  Download Certificate (SVG)
+                </a>
+                <Link
+                  href={`/verify/certificate/${encodeURIComponent(selectedCert.certCid || selectedCert.id || selectedCert.tokenId)}`}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0056D2] hover:bg-[#00419e] text-white text-xs font-bold py-3"
                 >
                   <Share2 className="h-4 w-4" />
-                  Add to LinkedIn &amp; Web3 ID
-                </Button>
+                  Verify On-Chain Page
+                </Link>
               </div>
             </div>
 
           </div>
         </div>
       )}
+
 
     </div>
   );
