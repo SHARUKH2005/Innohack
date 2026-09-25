@@ -18,7 +18,7 @@ export default async function RewardsPage() {
         <div className="mt-4 space-y-3">
           {rewards.length === 0 ? <Empty text="No rewards have been recorded for this account yet." /> : rewards.map((reward) => (
             <div key={String(reward.id)} className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
-              <div><p className="font-semibold text-slate-900">{reward.reason || "Learning reward"}</p><p className="text-xs text-slate-500">{formatDate(reward.granted_at)}</p></div>
+              <div><p className="font-semibold text-slate-900">{reward.reason || "Learning reward"}</p><p className="text-xs text-slate-500">{formatDate(reward.created_at || reward.granted_at)}</p></div>
               <span className="font-black text-emerald-700">+{Number(reward.amount)} MX</span>
             </div>
           ))}

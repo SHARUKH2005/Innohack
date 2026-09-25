@@ -86,7 +86,7 @@ export default async function ProviderPage() {
   const enrollments = (enrollmentData ?? []) as Enrollment[];
   const assessments = (assessmentData ?? []) as Array<{ id: string | number; course_id: string | number }>;
   const progress = (progressData ?? []) as Array<{ id: string | number; course_id: string | number; user_id: string | number; last_updated: string | null }>;
-  const studentIds = [...new Set([...enrollments.map((row) => row.user_id), ...progress.map((row) => row.user_id)])];
+  const studentIds = Array.from(new Set([...enrollments.map((row) => row.user_id), ...progress.map((row) => row.user_id)]));
   const { data: studentData } = studentIds.length
     ? await supabase.from("users").select("id, name").in("id", studentIds)
     : { data: [] };

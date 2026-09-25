@@ -99,8 +99,8 @@ export async function issueBlockchainCertificate(
     blockchain: "Ethereum Sepolia",
     transactionHash,
 
-    metadataURI: "Generating...",
-    certificateURI,
+    metadataURI: verificationURL,
+    certificateURI: verificationURL,
     verificationURL,
 
     qrCodeDataURI,

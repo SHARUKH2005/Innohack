@@ -943,15 +943,24 @@ export function loadCourseProgress(courseId: string): ProgressState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { completedLessons: [], totalEarnedMX: 0 };
     const allProgress = JSON.parse(raw);
-    return allProgress[courseId] || { completedLessons: [], totalEarnedMX: 0 };
+    const state = allProgress[courseId];
+    if (!state || !Array.isArray(state.completedLessons)) {
+      return { completedLessons: [], totalEarnedMX: 0 };
+    }
+    // Deduplicate lesson IDs
+    return {
+      completedLessons: Array.from(new Set(state.completedLessons)),
+      totalEarnedMX: Number(state.totalEarnedMX) || 0,
+      lastCompletedAt: state.lastCompletedAt,
+    };
   } catch (e) {
     return { completedLessons: [], totalEarnedMX: 0 };
   }
 }
 
-export function saveLessonCompletion(courseId: string, lessonId: string, rewardMX: number): ProgressState {
+export function saveLessonCompletion(courseId: string, lessonId: string, rewardMX: number = 0): ProgressState {
   if (typeof window === "undefined") {
-    return { completedLessons: [lessonId], totalEarnedMX: rewardMX };
+    return { completedLessons: [lessonId], totalEarnedMX: 0 };
   }
 
   try {
@@ -961,17 +970,18 @@ export function saveLessonCompletion(courseId: string, lessonId: string, rewardM
 
     if (!courseState.completedLessons.includes(lessonId)) {
       courseState.completedLessons.push(lessonId);
-      courseState.totalEarnedMX = (courseState.totalEarnedMX || 0) + rewardMX;
       courseState.lastCompletedAt = new Date().toISOString();
       allProgress[courseId] = courseState;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allProgress));
 
-      // Also trigger storage event so other components can react
       window.dispatchEvent(new Event("blocklearnx_progress_updated"));
     }
 
-    return courseState;
+    return {
+      completedLessons: Array.from(new Set(courseState.completedLessons)),
+      totalEarnedMX: 0
+    };
   } catch (e) {
-    return { completedLessons: [lessonId], totalEarnedMX: rewardMX };
+    return { completedLessons: [lessonId], totalEarnedMX: 0 };
   }
 }

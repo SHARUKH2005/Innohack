@@ -8,10 +8,12 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   // Core Next.js settings
   swcMinify: true,
-  reactStrictMode: true,
+  reactStrictMode: false,
   
-  // Handle output settings
-  output: 'standalone',
+  // Package import optimization for fast dev compilation
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-progress'],
+  },
   
   // Disable source maps in production for better performance
   productionBrowserSourceMaps: false,
@@ -59,6 +61,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
     ],
   },

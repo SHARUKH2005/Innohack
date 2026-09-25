@@ -73,12 +73,12 @@ export function LearningSidebar({
 
   return (
     <aside
-      className={`fixed lg:static top-0 bottom-0 left-0 z-40 w-80 sm:w-88 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out shrink-0 ${
+      className={`fixed lg:static top-0 bottom-0 left-0 z-40 w-80 sm:w-88 h-full max-h-full bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out shrink-0 min-h-0 overflow-hidden ${
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       }`}
     >
       {/* ── 1. SIDEBAR HEADER: Course Title & Back Button ── */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70">
+      <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 shrink-0">
         <Link
           href={`/courses/${curriculum.courseId}`}
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#0056D2] mb-3 transition-colors"
@@ -126,7 +126,7 @@ export function LearningSidebar({
       </div>
 
       {/* ── 3. SEARCH LESSONS FILTER ── */}
-      <div className="p-3 border-b border-slate-100 bg-white">
+      <div className="p-3 border-b border-slate-100 bg-white shrink-0">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
@@ -140,7 +140,7 @@ export function LearningSidebar({
       </div>
 
       {/* ── 4. LESSONS LIST GROUPED BY MODULE ── */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100 scrollbar-thin">
         {curriculum.modules.map((module) => {
           const filteredLessons = module.lessons.filter(
             (l) =>

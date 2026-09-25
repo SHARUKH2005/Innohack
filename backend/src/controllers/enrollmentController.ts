@@ -28,3 +28,22 @@ export async function enrollUser(req: Request, res: Response) {
     });
   }
 }
+
+export async function getUserEnrollments(req: Request, res: Response) {
+  try {
+    const { userId } = req.params;
+
+    const { data, error } = await supabase
+      .from("enrollments")
+      .select("*, courses(*)")
+      .eq("user_id", userId);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json(data || []);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user enrollments" });
+  }
+}
