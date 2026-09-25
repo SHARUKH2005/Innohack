@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       avatar_url: avatarUrl,
       created_at: authUser.created_at || now,
       last_login_at: now,
-      role: null, // Needs onboarding role selection
+      role: null,
     };
 
     setProfile(newProfile);

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AuthCard } from "@/components/auth/auth-card";
 import { Navbar } from "@/components/shared/navbar";
+import { Logo } from "@/components/shared/logo";
 
 /* ─── DATA ──────────────────────────────────────── */
 const BENEFITS = [
@@ -87,8 +88,8 @@ function SplitDropButton({
   const divider = variant === "primary" ? "border-white/25" : "border-slate-200";
 
   return (
-    <div ref={ref} className="relative">
-      <div className={`flex rounded-xl overflow-hidden border shadow-sm ${variant === "primary" ? "border-[#0056D2]" : "border-slate-300"}`}>
+    <div ref={ref} className="relative z-30">
+      <div className={`flex rounded-xl overflow-hidden border shadow-md ${variant === "primary" ? "border-[#0056D2]" : "border-slate-300"}`}>
         <button
           id={id}
           onClick={mainAction}
@@ -98,23 +99,26 @@ function SplitDropButton({
           {icon}
         </button>
         <button
+          type="button"
           onClick={() => setOpen(!open)}
           className={`w-11 flex items-center justify-center border-l transition-colors ${base} ${divider}`}
+          title="Toggle Options"
         >
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </button>
       </div>
 
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-40">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 py-1 divide-y divide-slate-100 text-left animate-in fade-in slide-in-from-top-2 duration-150">
           {dropItems.map((item, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => { item.action(); setOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-[#0056D2] transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-slate-800 hover:bg-blue-50 hover:text-[#0056D2] transition-colors text-left"
             >
-              <span className="text-lg">{item.emoji}</span>
-              {item.label}
+              <span className="text-base shrink-0">{item.emoji}</span>
+              <span className="truncate">{item.label}</span>
             </button>
           ))}
         </div>
@@ -152,9 +156,9 @@ export default function LandingPage() {
       <Navbar />
 
       {/* ══ 1. HERO ══════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 pt-20 pb-24">
+      <section className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 pt-20 pb-28">
         {/* Background photo */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <Image
             src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&h=900&fit=crop&auto=format"
             alt="Technology background"
@@ -162,8 +166,8 @@ export default function LandingPage() {
             className="object-cover opacity-10"
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-blue-950/80 to-indigo-950/90" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-blue-950/80 to-indigo-950/90" />
 
         <div className="relative container mx-auto px-4 lg:px-8 max-w-5xl text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold mb-6">
@@ -516,7 +520,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1 space-y-3">
-              <p className="text-white font-black text-lg">BlockLearnX</p>
+              <Logo height={34} variant="dark" />
               <p className="text-xs leading-relaxed text-slate-500 max-w-xs">The leading Web3 learning platform with on-chain credentials and protocol rewards.</p>
             </div>
             <div className="space-y-2">
