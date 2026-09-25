@@ -30,6 +30,7 @@ interface NavbarProps {
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
+  { href: "/courses", label: "Courses" },
   { href: "/browse", label: "Browse" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/community", label: "Community" },
@@ -78,7 +79,7 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
 
         {/* ── LEFT: Logo ── */}
         <Link href="/" className="shrink-0 flex items-center py-2">
-          <Logo height={64} />
+          <Logo height={64} width={220} />
         </Link>
 
         {/* ── CENTER: Nav Links (desktop) ── */}
@@ -227,8 +228,11 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
             </div>
           ) : (
             <div className="hidden sm:flex items-center gap-2">
-              <Button asChild className="h-9 text-xs font-bold bg-[#0056D2] hover:bg-[#00419e] text-white px-5 shadow-xs">
+              <Button asChild variant="outline" className="h-9 text-xs font-semibold border-slate-300 px-4">
                 <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild className="h-9 text-xs font-bold bg-[#0056D2] hover:bg-[#00419e] text-white px-5 shadow-xs">
+                <Link href="/register">Get Started</Link>
               </Button>
             </div>
           )}
@@ -274,8 +278,11 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
           {/* Auth buttons on mobile */}
           {!(user || profile) && (
             <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-              <Button asChild className="w-full bg-[#0056D2] text-white text-sm font-bold">
+              <Button asChild variant="outline" className="w-full text-sm font-semibold">
                 <Link href="/login" onClick={() => setMobileOpen(false)}>Login</Link>
+              </Button>
+              <Button asChild className="w-full bg-[#0056D2] text-white text-sm font-bold">
+                <Link href="/register" onClick={() => setMobileOpen(false)}>Get Started</Link>
               </Button>
             </div>
           )}
