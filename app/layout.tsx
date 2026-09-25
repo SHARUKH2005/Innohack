@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/supabase/auth-context";
 import { RoleOnboardingModal } from "@/components/auth/role-onboarding-modal";
+import { WalletProvider } from "@/lib/wallet-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,8 +40,10 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} h-full`}>
         <AuthProvider>
-          {children}
-          <RoleOnboardingModal />
+          <WalletProvider>
+            {children}
+            <RoleOnboardingModal />
+          </WalletProvider>
         </AuthProvider>
       </body>
     </html>
