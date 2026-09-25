@@ -4,28 +4,32 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/supabase/auth-context";
-import { 
-  Logo 
-} from "@/components/shared/logo";
-import { 
-  Button 
-} from "@/components/ui/button";
-import { 
-  Input 
-} from "@/components/ui/input";
-import { 
-  Wallet, 
-  ArrowRight, 
-  CheckCircle2, 
-  Lock, 
-  Mail, 
-  User, 
-  ShieldCheck, 
+import { useBlockchain } from "@/lib/hooks/useBlockchain";
+import { Logo } from "@/components/shared/logo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Wallet,
+  ArrowRight,
+  CheckCircle2,
+  Lock,
+  Mail,
+  User,
+  ShieldCheck,
   Sparkles,
   ChevronRight,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  GraduationCap,
+  Building2,
+  Code2,
+  Cpu,
+  LogIn,
+  UserPlus,
+  ArrowLeft,
 } from "lucide-react";
+
+export type RoleType = "Learner" | "Course Provider" | "Platform Provider / Developer";
 
 interface AuthCardProps {
   initialMode?: "login" | "register";
@@ -33,22 +37,26 @@ interface AuthCardProps {
   onSuccess?: () => void;
 }
 
-export function AuthCard({ 
-  initialMode = "login", 
+export function AuthCard({
+  initialMode = "login",
   redirectUrl = "/dashboard",
-  onSuccess 
+  onSuccess,
 }: AuthCardProps) {
   const router = useRouter();
-  const { signInWithGoogle, loading: authLoading, error: contextError } = useAuth();
+  const { signInWithGoogle, loading: authLoading, error: contextError, setUserRole } = useAuth();
+  const { connectWallet, isConnected, walletAddress } = useBlockchain();
+
+  // Step 0: role-selection, Step 1: credentials, Step 2: connect-wallet
+  const [step, setStep] = useState<"role-selection" | "credentials" | "connect-wallet">("role-selection");
+  const [selectedRole, setSelectedRole] = useState<RoleType>("Learner");
   const [mode, setMode] = useState<"login" | "register">(initialMode);
-  const [step, setStep] = useState<"credentials" | "connect-wallet">("credentials");
 
   // Form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
+
   // Validation / Error states
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,11 +66,67 @@ export function AuthCard({
 
   const activeError = error || contextError;
 
+  const rolesConfig: {
+    id: RoleType;
+    title: string;
+    icon: any;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    description: string;
+    badge: string;
+    defaultRedirect: string;
+  }[] = [
+    {
+      id: "Course Provider",
+      title: "Course Provider",
+      icon: Building2,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-200 hover:border-purple-500",
+      description: "Create & publish courses, quiz builder, assignment grading, and track revenue.",
+      badge: "Educator / University",
+      defaultRedirect: "/",
+    },
+    {
+      id: "Learner",
+      title: "Learner",
+      icon: GraduationCap,
+      color: "text-[#0056D2]",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200 hover:border-[#0056D2]",
+      description: "Enroll in Web3 courses, complete assignments, earn MX tokens & Soulbound NFTs.",
+      badge: "Student / Developer",
+      defaultRedirect: "/portfolio",
+    },
+    {
+      id: "Platform Provider / Developer",
+      title: "Platform Provider / Developer",
+      icon: Code2,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200 hover:border-emerald-500",
+      description: "Protocol administration, smart contracts deployment, platform metrics & ecosystem ops.",
+      badge: "Admin / Protocol Dev",
+      defaultRedirect: "/dashboard?tab=blockchain",
+    },
+  ];
+
+  const handleSelectRoleAndMode = (role: RoleType, selectedMode: "login" | "register") => {
+    setSelectedRole(role);
+    setMode(selectedMode);
+    setError("");
+    setStep("credentials");
+  };
+
   const handleGoogleClick = async () => {
     setError("");
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
+      if (setUserRole) {
+        await setUserRole(selectedRole === "Platform Provider / Developer" ? "Course Provider" : selectedRole);
+      }
     } catch (e: any) {
       setError("Google authentication error occurred.");
     } finally {
@@ -105,35 +169,47 @@ export function AuthCard({
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
+      if (setUserRole) {
+        setUserRole(selectedRole === "Platform Provider / Developer" ? "Course Provider" : selectedRole);
+      }
       // Advance to Connect Wallet step
       setStep("connect-wallet");
     }, 600);
   };
 
-  const handleWalletSelect = (walletName: string) => {
+  const getTargetRedirect = () => {
+    if (selectedRole === "Course Provider") return "/";
+    if (selectedRole === "Platform Provider / Developer") return "/dashboard?tab=blockchain";
+    return "/portfolio";
+  };
+
+  const handleWalletSelect = async (walletName: string) => {
     setSelectedWallet(walletName);
     setIsConnectingWallet(true);
-    setTimeout(() => {
+    try {
+      await connectWallet();
+    } catch (err) {
+      console.warn("Wallet connect warning:", err);
+    } finally {
       setIsConnectingWallet(false);
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push(redirectUrl);
+        router.push(getTargetRedirect());
       }
-    }, 900);
+    }
   };
 
   const handleSkipWallet = () => {
     if (onSuccess) {
       onSuccess();
     } else {
-      router.push(redirectUrl);
+      router.push(getTargetRedirect());
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden font-sans">
-      
+    <div className="w-full max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden font-sans">
       {/* Header Banner */}
       <div className="bg-slate-900 px-6 py-6 text-white text-center space-y-2 border-b border-slate-800 relative">
         <div className="flex justify-center mb-1">
@@ -143,33 +219,56 @@ export function AuthCard({
           Official Web3 Learning &amp; Soulbound Credential Platform
         </p>
 
-        {/* Step Progress Indicator */}
-        <div className="flex items-center justify-center gap-3 pt-3">
+        {/* 3 Step Progress Indicator */}
+        <div className="flex items-center justify-center gap-2 pt-3">
           <div className="flex items-center gap-1.5 text-xs font-bold">
-            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
-              step === "credentials" 
-                ? "bg-[#0056D2] text-white" 
-                : "bg-emerald-500 text-white"
-            }`}>
-              {step === "credentials" ? "1" : "✓"}
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
+                step === "role-selection"
+                  ? "bg-[#0056D2] text-white"
+                  : "bg-emerald-500 text-white"
+              }`}
+            >
+              {step === "role-selection" ? "1" : "✓"}
             </span>
-            <span className={step === "credentials" ? "text-white font-semibold" : "text-slate-400"}>
+            <span className={step === "role-selection" ? "text-white font-semibold" : "text-slate-400"}>
+              Category
+            </span>
+          </div>
+
+          <div className="w-6 h-0.5 bg-slate-700" />
+
+          <div className="flex items-center gap-1.5 text-xs font-bold">
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
+                step === "credentials"
+                  ? "bg-[#0056D2] text-white"
+                  : step === "connect-wallet"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-slate-800 text-slate-500"
+              }`}
+            >
+              {step === "connect-wallet" ? "✓" : "2"}
+            </span>
+            <span className={step === "credentials" ? "text-white font-semibold" : "text-slate-500"}>
               {mode === "login" ? "Login" : "Register"}
             </span>
           </div>
 
-          <div className="w-8 h-0.5 bg-slate-700" />
+          <div className="w-6 h-0.5 bg-slate-700" />
 
           <div className="flex items-center gap-1.5 text-xs font-bold">
-            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
-              step === "connect-wallet" 
-                ? "bg-[#0056D2] text-white animate-pulse" 
-                : "bg-slate-800 text-slate-500"
-            }`}>
-              2
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${
+                step === "connect-wallet"
+                  ? "bg-[#0056D2] text-white animate-pulse"
+                  : "bg-slate-800 text-slate-500"
+              }`}
+            >
+              3
             </span>
             <span className={step === "connect-wallet" ? "text-white font-semibold" : "text-slate-500"}>
-              Connect Wallet
+              Wallet
             </span>
           </div>
         </div>
@@ -177,36 +276,132 @@ export function AuthCard({
 
       {/* Main Body */}
       <div className="p-6 sm:p-8 space-y-6">
-        
-        {step === "credentials" ? (
+        {/* STEP 0: ROLE SELECTION */}
+        {step === "role-selection" && (
+          <div className="space-y-6">
+            <div className="text-center space-y-1">
+              <span className="px-3 py-1 rounded-full bg-blue-100 text-[#0056D2] text-[11px] font-extrabold uppercase tracking-wider">
+                Step 1 of 3: Choose Portal Category
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                Select Your Account Type
+              </h2>
+              <p className="text-xs text-slate-500">
+                Choose your category below to access the dedicated login or registration portal.
+              </p>
+            </div>
+
+            {/* 3 Categories Grid */}
+            <div className="space-y-4">
+              {rolesConfig.map((role) => {
+                const IconComp = role.icon;
+                return (
+                  <div
+                    key={role.id}
+                    className={`p-5 rounded-2xl border-2 transition-all space-y-3 bg-white ${role.borderColor} hover:shadow-lg`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-xl ${role.bgColor} ${role.color} flex items-center justify-center shrink-0`}>
+                          <IconComp className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-slate-900 text-base">{role.title}</h3>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 text-slate-600">
+                              {role.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                            {role.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dedicated Login & Sign Up buttons for this category */}
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                      <Button
+                        type="button"
+                        onClick={() => handleSelectRoleAndMode(role.id, "login")}
+                        className="h-10 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl gap-1.5 shadow-sm"
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        Login
+                      </Button>
+
+                      <Button
+                        type="button"
+                        onClick={() => handleSelectRoleAndMode(role.id, "register")}
+                        className="h-10 bg-[#0056D2] hover:bg-[#00419e] text-white font-bold text-xs rounded-xl gap-1.5 shadow-sm"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Sign Up
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 1: CREDENTIALS */}
+        {step === "credentials" && (
           <>
+            {/* Active Category Header Bar */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">Selected Category:</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#0056D2]/10 text-[#0056D2] text-xs font-bold">
+                  {selectedRole === "Course Provider" && "👨‍🏫 "}
+                  {selectedRole === "Learner" && "🎓 "}
+                  {selectedRole === "Platform Provider / Developer" && "💻 "}
+                  {selectedRole}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep("role-selection")}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline flex items-center gap-1"
+              >
+                <ArrowLeft className="w-3 h-3" /> Change
+              </button>
+            </div>
+
             {/* Mode Switch Tabs (Login / Register) */}
             <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold">
               <button
                 type="button"
-                onClick={() => { setMode("login"); setError(""); }}
+                onClick={() => {
+                  setMode("login");
+                  setError("");
+                }}
                 className={`py-2.5 rounded-lg transition-all ${
                   mode === "login"
                     ? "bg-white text-[#0056D2] shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Login
+                Login ({selectedRole})
               </button>
               <button
                 type="button"
-                onClick={() => { setMode("register"); setError(""); }}
+                onClick={() => {
+                  setMode("register");
+                  setError("");
+                }}
                 className={`py-2.5 rounded-lg transition-all ${
                   mode === "register"
                     ? "bg-white text-[#0056D2] shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Register
+                Register ({selectedRole})
               </button>
             </div>
 
-            {/* Official Google Sign-In Button */}
+            {/* Google Sign-In Button */}
             <div className="space-y-3">
               <button
                 type="button"
@@ -236,7 +431,7 @@ export function AuthCard({
                     />
                   </svg>
                 )}
-                <span>{isGoogleLoading ? "Connecting to Google..." : "Continue with Google"}</span>
+                <span>{isGoogleLoading ? "Connecting to Google..." : `Continue with Google as ${selectedRole}`}</span>
               </button>
 
               <div className="relative flex items-center justify-center">
@@ -256,7 +451,6 @@ export function AuthCard({
 
             {/* Form */}
             <form onSubmit={handleCredentialsSubmit} className="space-y-4">
-              
               {mode === "register" && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
@@ -334,36 +528,50 @@ export function AuthCard({
                   </span>
                 ) : mode === "register" ? (
                   <span className="flex items-center gap-1.5">
-                    Create Account
+                    Register as {selectedRole}
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5">
-                    Login
+                    Login as {selectedRole}
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
               </Button>
             </form>
 
-            <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+            <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setStep("role-selection")}
+                className="font-semibold text-slate-600 hover:text-slate-900 underline flex items-center gap-1"
+              >
+                ← Back to Portal Select
+              </button>
+
               {mode === "register" ? (
                 <p>
-                  Already have an account?{" "}
+                  Already registered?{" "}
                   <button
                     type="button"
-                    onClick={() => { setMode("login"); setError(""); }}
+                    onClick={() => {
+                      setMode("login");
+                      setError("");
+                    }}
                     className="font-bold text-[#0056D2] hover:underline"
                   >
-                    Login here
+                    Login now
                   </button>
                 </p>
               ) : (
                 <p>
-                  Don&apos;t have an account?{" "}
+                  Need an account?{" "}
                   <button
                     type="button"
-                    onClick={() => { setMode("register"); setError(""); }}
+                    onClick={() => {
+                      setMode("register");
+                      setError("");
+                    }}
                     className="font-bold text-[#0056D2] hover:underline"
                   >
                     Register now
@@ -372,18 +580,19 @@ export function AuthCard({
               )}
             </div>
           </>
-        ) : (
-          /* STEP 2: CONNECT WALLET */
+        )}
+
+        {/* STEP 2: CONNECT WALLET */}
+        {step === "connect-wallet" && (
           <div className="space-y-5">
             <div className="text-center space-y-1.5">
               <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-[#0056D2] flex items-center justify-center mx-auto">
                 <Wallet className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-black text-slate-900">
-                Connect Web3 Wallet
-              </h3>
+              <h3 className="text-xl font-black text-slate-900">Connect Web3 Wallet</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Connect your Ethereum or Polygon wallet to claim $MX bounties &amp; mint Soulbound NFT certificates.
+                Connect your Ethereum or Polygon wallet to claim $MX bounties &amp; mint Soulbound NFT certificates for{" "}
+                <span className="font-bold text-[#0056D2]">{selectedRole}</span>.
               </p>
             </div>
 
@@ -431,7 +640,7 @@ export function AuthCard({
                 onClick={handleSkipWallet}
                 className="w-full h-11 bg-[#0056D2] hover:bg-[#00419e] text-white font-bold text-xs rounded-xl shadow-md gap-2"
               >
-                <span>Continue to Dashboard ↗</span>
+                <span>Continue to {selectedRole} Portal ↗</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
 
@@ -443,10 +652,8 @@ export function AuthCard({
                 ← Back to Credentials
               </button>
             </div>
-
           </div>
         )}
-
       </div>
     </div>
   );

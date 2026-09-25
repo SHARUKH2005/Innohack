@@ -11,7 +11,7 @@ export interface UserProfile {
   avatar_url: string;
   created_at: string;
   last_login_at: string;
-  role: "Learner" | "Course Provider" | null;
+  role: "Learner" | "Course Provider" | "Platform Admin" | null;
 }
 
 interface AuthContextType {
@@ -24,7 +24,7 @@ interface AuthContextType {
   showRoleModal: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  setUserRole: (role: "Learner" | "Course Provider") => Promise<void>;
+  setUserRole: (role: "Learner" | "Course Provider" | "Platform Admin") => Promise<void>;
   clearError: () => void;
 }
 
@@ -229,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Set User Role (Onboarding)
-  const setUserRole = async (role: "Learner" | "Course Provider") => {
+  const setUserRole = async (role: "Learner" | "Course Provider" | "Platform Admin") => {
     if (!profile) return;
 
     const updatedProfile: UserProfile = {

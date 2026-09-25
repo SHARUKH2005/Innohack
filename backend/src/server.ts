@@ -6,6 +6,7 @@ import courseRoutes from "./routes/courseRoutes";
 import enrollmentRoutes from "./routes/enrollmentRoutes";
 import progressRoutes from "./routes/progressRoutes";
 import assessmentRoutes from "./routes/assessmentRoutes";
+import blockchainRoutes from "./routes/blockchainRoutes";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/assessments", assessmentRoutes);
+app.use("/api/blockchain", blockchainRoutes);
 
 const PORT = process.env.PORT || 5000;
 

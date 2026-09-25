@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/supabase/auth-context";
+import { useBlockchain } from "@/lib/hooks/useBlockchain";
 import {
   Search,
   Bell,
@@ -20,9 +21,15 @@ import {
   Settings,
   User as UserIcon,
   ShieldCheck,
+  Copy,
+  Check,
+  ExternalLink,
+  RefreshCw,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
+import { EcosystemFlowBar } from "@/components/shared/ecosystem-flow-bar";
 
 interface NavbarProps {
   title?: string;
@@ -31,41 +38,66 @@ interface NavbarProps {
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/courses", label: "Courses" },
-  { href: "/community", label: "Marketplace" },
+  { href: "/dashboard", label: "My Learning" },
+  { href: "/dashboard?tab=rewards", label: "Rewards" },
+];
+
+const NFT_DROPDOWN_ITEMS = [
+  { href: "/collection", label: "🖼️ My NFT Collection" },
+  { href: "/collection?tab=marketplace", label: "🛒 NFT Marketplace" },
+  { href: "/collection?tab=achievements", label: "🏆 Achievement NFTs" },
+  { href: "/collection?tab=certificates", label: "🎓 Certificate NFTs" },
 ];
 
 const PROFILE_MENU = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin", icon: ShieldCheck, label: "Admin Control" },
   { href: "/dashboard", icon: BookOpen, label: "My Courses" },
-  { href: "/dashboard", icon: Award, label: "Certificates" },
-  { href: "/dashboard", icon: ShieldCheck, label: "NFTs" },
-  { href: "/dashboard", icon: Coins, label: "Rewards" },
-  { href: "/dashboard", icon: Briefcase, label: "Portfolio" },
-  { href: "/dashboard", icon: Settings, label: "Settings" },
+  { href: "/collection?tab=certificates", icon: Award, label: "Certificates" },
+  { href: "/collection", icon: ShieldCheck, label: "NFTs" },
+  { href: "/dashboard?tab=rewards", icon: Coins, label: "Rewards" },
+  { href: "/portfolio", icon: Briefcase, label: "Portfolio" },
+  { href: "/dashboard?tab=settings", icon: Settings, label: "Settings" },
 ];
 
 export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
   const pathname = usePathname();
   const { user, profile, logout } = useAuth();
+  const { isConnected, walletAddress, mxBalance, isLoading, error: walletError, connectWallet, connectDemoWallet, disconnectWallet } = useBlockchain();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [nftOpen, setNftOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const nftRef = useRef<HTMLDivElement>(null);
+  const walletRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+      if (nftRef.current && !nftRef.current.contains(e.target as Node)) setNftOpen(false);
+      if (walletRef.current && !walletRef.current.contains(e.target as Node)) setWalletOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const handleCopyAddress = () => {
+    if (walletAddress) {
+      navigator.clipboard.writeText(walletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const isActive = (href: string) => pathname === href;
 
@@ -93,6 +125,51 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
               {link.label}
             </Link>
           ))}
+
+          {/* NFTs Dropdown */}
+          <div ref={nftRef} className="relative">
+            <button
+              onClick={() => setNftOpen(!nftOpen)}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+                pathname.startsWith("/collection")
+                  ? "text-[#0056D2] bg-blue-50 font-semibold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              <span>🖼️ NFTs</span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+            </button>
+
+            {nftOpen && (
+              <div className="absolute left-0 top-full mt-1 w-56 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl py-2 z-50 animate-in fade-in">
+                <div className="px-3 py-1.5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
+                  NFT Credentials
+                </div>
+                {NFT_DROPDOWN_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setNftOpen(false)}
+                    className="block px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-[#0056D2] hover:text-white transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Portfolio Link */}
+          <Link
+            href="/portfolio"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+              isActive("/portfolio")
+                ? "text-[#0056D2] bg-blue-50 font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            <span>👤 Portfolio</span>
+          </Link>
         </nav>
 
         {/* ── RIGHT: Actions ── */}
@@ -127,7 +204,7 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
           {/* Notifications */}
           <div ref={notifRef} className="relative">
             <button
-              onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+              onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); setWalletOpen(false); }}
               className="relative p-2 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
             >
               <Bell className="h-5 w-5" />
@@ -154,17 +231,159 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
             )}
           </div>
 
-          {/* Wallet button */}
-          <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition-colors">
-            <Wallet className="h-4 w-4 text-[#0056D2]" />
-            <span className="hidden lg:inline">Connect Wallet</span>
-          </button>
+          {/* ── Wallet Component ── */}
+          <div ref={walletRef} className="relative hidden sm:block">
+            {isConnected && walletAddress ? (
+              <button
+                onClick={() => { setWalletOpen(!walletOpen); setProfileOpen(false); setNotifOpen(false); }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 transition-all text-xs font-bold text-emerald-950 shadow-xs"
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="font-mono">
+                  {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </span>
+                <span className="bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold">
+                  {Number(mxBalance).toLocaleString()} MX
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-emerald-700" />
+              </button>
+            ) : (
+              <button
+                onClick={() => { setWalletOpen(!walletOpen); setProfileOpen(false); setNotifOpen(false); }}
+                disabled={isLoading}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#0056D2]/30 bg-blue-50 hover:bg-[#0056D2] hover:text-white text-xs font-bold text-[#0056D2] transition-all shadow-xs disabled:opacity-50 group"
+              >
+                {isLoading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wallet className="h-4 w-4" />
+                )}
+                <span>{isLoading ? "Connecting..." : "Connect Wallet"}</span>
+              </button>
+            )}
+
+            {/* Wallet Dropdown Modal */}
+            {walletOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-4 z-50 animate-in fade-in space-y-3 font-sans">
+                {isConnected && walletAddress ? (
+                  <>
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-xs font-bold text-white uppercase tracking-wide">Web3 Wallet Connected</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        Chain #31337
+                      </span>
+                    </div>
+
+                    {/* Address Box */}
+                    <div className="bg-slate-800/80 rounded-xl p-3 space-y-1.5 border border-slate-700/60">
+                      <div className="flex justify-between items-center text-[11px] text-slate-400 font-medium">
+                        <span>Account Address</span>
+                        <button
+                          onClick={handleCopyAddress}
+                          className="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 transition-colors"
+                        >
+                          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                          {copied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
+                      <p className="font-mono text-xs font-bold text-white break-all">{walletAddress}</p>
+                    </div>
+
+                    {/* Token Balance Box */}
+                    <div className="bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider font-extrabold text-amber-400">Platform Token Balance</p>
+                        <p className="text-xl font-black text-amber-300 mt-0.5">{Number(mxBalance).toLocaleString()} <span className="text-xs text-amber-400 font-bold">MX</span></p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
+                        <Zap className="w-5 h-5" />
+                      </div>
+                    </div>
+
+                    {/* Options */}
+                    <div className="space-y-1 pt-1">
+                      <Link
+                        href="/dashboard?tab=blockchain"
+                        onClick={() => setWalletOpen(false)}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-blue-400" />
+                          View Blockchain Smart Contracts
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                      </Link>
+                      <button
+                        onClick={() => { setWalletOpen(false); disconnectWallet(); }}
+                        className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 border border-red-500/20 transition-colors mt-2"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Disconnect Wallet
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-b border-slate-800 pb-3">
+                      <p className="text-sm font-bold text-white">🦊 Connect Your Wallet</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Choose a provider to connect to BlockLearnX</p>
+                    </div>
+
+                    {/* Error display */}
+                    {walletError && (
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2 text-[11px] text-red-400 font-medium">
+                        ⚠️ {walletError}
+                      </div>
+                    )}
+
+                    {/* MetaMask real connection */}
+                    <button
+                      onClick={async () => { try { await connectWallet(); setWalletOpen(false); } catch {} }}
+                      disabled={isLoading}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 transition-all disabled:opacity-50"
+                    >
+                      <span className="text-2xl">🦊</span>
+                      <div className="text-left flex-1">
+                        <p className="text-xs font-bold text-white">MetaMask</p>
+                        <p className="text-[10px] text-slate-400">Connect your real MetaMask wallet</p>
+                      </div>
+                      {isLoading ? <RefreshCw className="w-4 h-4 text-orange-400 animate-spin" /> : <ChevronDown className="w-4 h-4 text-slate-500 -rotate-90" />}
+                    </button>
+
+                    {/* Demo wallet */}
+                    <button
+                      onClick={async () => { await connectDemoWallet(); setWalletOpen(false); }}
+                      disabled={isLoading}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all disabled:opacity-50"
+                    >
+                      <span className="text-2xl">🎭</span>
+                      <div className="text-left flex-1">
+                        <p className="text-xs font-bold text-white">Demo Wallet</p>
+                        <p className="text-[10px] text-slate-400">Use a pre-funded demo wallet (no extension needed)</p>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-slate-500 -rotate-90" />
+                    </button>
+
+                    <p className="text-[10px] text-slate-500 text-center pt-1">
+                      MetaMask requires the browser extension installed.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Auth: Profile or Login/Register */}
           {user || profile ? (
             <div ref={profileRef} className="relative">
               <button
-                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
+                onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); setWalletOpen(false); }}
                 className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-colors"
               >
                 {profile?.avatar_url ? (
@@ -284,11 +503,37 @@ export function Navbar({ title = "BlockLearnX" }: NavbarProps) {
           )}
 
           {/* Wallet on mobile */}
-          <div className="pt-2">
-            <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm font-medium text-slate-700">
-              <Wallet className="h-4 w-4 text-[#0056D2]" />
-              Connect Wallet
-            </button>
+          <div className="pt-2 border-t border-slate-100 mt-2">
+            {isConnected && walletAddress ? (
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-mono text-xs font-bold text-emerald-950">
+                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    </span>
+                  </div>
+                  <span className="bg-emerald-200 text-emerald-900 text-xs font-bold px-2 py-0.5 rounded">
+                    {mxBalance} MX
+                  </span>
+                </div>
+                <button
+                  onClick={() => { setMobileOpen(false); disconnectWallet(); }}
+                  className="w-full text-center text-xs font-bold text-red-600 hover:underline pt-1"
+                >
+                  Disconnect Wallet
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { connectWallet(); setMobileOpen(false); }}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-[#0056D2] bg-[#0056D2] text-white text-sm font-bold shadow-md"
+              >
+                <Wallet className="h-4 w-4" />
+                {isLoading ? "Connecting Wallet..." : "Connect Wallet"}
+              </button>
+            )}
           </div>
         </div>
       )}
